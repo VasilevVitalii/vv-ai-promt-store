@@ -1,0 +1,39 @@
+{
+    "name": "vv-ai-promt-store",
+    "version": "1.0.0",
+    "description": "Helper for store promt in file",
+    "main": "dist/src/index.js",
+    "types": "dist/src/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./dist/src/index.d.ts",
+            "import": "./dist/src/index.js"
+        }
+    },
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "build": "tsc",
+        "test": "npm run build && node --experimental-vm-modules node_modules/jest/bin/jest.js"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/VasilevVitalii/vv-config-jsonc.git"
+    },
+    "keywords": [],
+    "author": "Vitalii Vasilev",
+    "license": "MIT",
+    "type": "module",
+    "bugs": {
+        "url": "https://github.com/VasilevVitalii/vv-config-jsonc/issues"
+    },
+    "homepage": "https://github.com/VasilevVitalii/vv-config-jsonc#readme",
+    "devDependencies": {
+        "@types/jest": "^30.0.0",
+        "@types/node": "^24.10.1",
+        "jest": "^30.2.0",
+        "ts-jest": "^29.4.5",
+        "typescript": "^5.9.3"
+    }
+}
