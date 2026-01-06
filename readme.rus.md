@@ -38,6 +38,8 @@ $$system
 Текст системного промпта
 $$user
 Текст пользовательского промпта
+$$segment=имяСегмента
+Содержимое сегмента
 $$end
 ```
 
@@ -47,10 +49,12 @@ $$end
 - `$$end` - Конец блока промпта
 - `$$user` - Пользовательский промпт (обязательно)
 - `$$system` - Системный промпт (опционально)
-- `$$@ключ=значение` - Пользовательские параметры (опционально)
+- `$$@ключ=значение` - Пользовательские опции (опционально)
+- `$$segment=имя` - Именованные текстовые сегменты (опционально)
 - Текст до первого `$$begin` и после последнего `$$end` игнорируется
 - Порядок секций внутри блока не важен
 - Все секции, кроме `$$user`, опциональны
+- Можно определить несколько сегментов с разными именами
 
 ## Использование
 
@@ -74,7 +78,7 @@ console.log(prompts)
 // [{
 //   system: 'Ты полезный ассистент',
 //   user: 'Сколько будет 2+2?',
-//   param: { model: 'gpt-4' }
+//   options: { model: 'gpt-4' }
 // }]
 ```
 
@@ -86,7 +90,7 @@ import { PromtStore, TPromt } from 'vv-ai-promt-store'
 const prompts: TPromt[] = [{
   system: 'Ты полезный ассистент',
   user: 'Привет, мир!',
-  param: {
+  options: {
     temperature: '0.7',
     model: 'gpt-4'
   }
@@ -127,6 +131,36 @@ const prompts = PromtLoad(text)
 console.log(prompts.length) // 2
 ```
 
+### Работа с сегментами
+
+Сегменты позволяют хранить именованные блоки текста внутри промпта:
+
+```typescript
+import { PromtLoad, PromtStore, TPromt } from 'vv-ai-promt-store'
+
+const prompts: TPromt[] = [{
+  user: 'Проанализируй этот код',
+  segment: {
+    code: 'function hello() { return "world"; }',
+    tests: 'test("hello", () => { expect(hello()).toBe("world"); })'
+  }
+}]
+
+const text = PromtStore(prompts)
+console.log(text)
+// $$begin
+// $$user
+// Проанализируй этот код
+// $$segment=code
+// function hello() { return "world"; }
+// $$segment=tests
+// test("hello", () => { expect(hello()).toBe("world"); })
+// $$end
+
+const parsed = PromtLoad(text)
+console.log(parsed[0].segment.code) // Доступ к содержимому сегмента
+```
+
 ## API
 
 ### Типы
@@ -135,7 +169,8 @@ console.log(prompts.length) // 2
 type TPromt = {
   system?: string
   user: string
-  param?: Record<string, string>
+  options?: Record<string, string>
+  segment?: Record<string, string>
 }
 ```
 

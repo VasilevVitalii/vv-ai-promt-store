@@ -12,7 +12,7 @@ $$end`
         expect(result).toHaveLength(1)
         expect(result[0].user).toBe('Hello World')
         expect(result[0].system).toBeUndefined()
-        expect(result[0].param).toBeUndefined()
+        expect(result[0].options).toBeUndefined()
     })
 
     test('парсит промпт с system и user', () => {
@@ -41,7 +41,7 @@ $$end`
         const result = PromtLoad(raw)
 
         expect(result).toHaveLength(1)
-        expect(result[0].param).toEqual({
+        expect(result[0].options).toEqual({
             model: 'gpt-4',
             temperature: '0.7'
         })
@@ -63,7 +63,7 @@ $$end`
         expect(result).toHaveLength(1)
         expect(result[0].system).toBe('System prompt here')
         expect(result[0].user).toBe('User prompt here')
-        expect(result[0].param).toEqual({
+        expect(result[0].options).toEqual({
             key1: 'value1',
             key2: 'value2'
         })
@@ -176,7 +176,7 @@ $$end`
         expect(result).toHaveLength(1)
         expect(result[0].user).toBe('User prompt')
         expect(result[0].system).toBe('System prompt')
-        expect(result[0].param).toEqual({ key: 'value' })
+        expect(result[0].options).toEqual({ key: 'value' })
     })
 
     test('возвращает пустой массив если нет промптов', () => {
@@ -207,6 +207,80 @@ $$end`
 
         expect(result).toHaveLength(1)
         expect(result[0].user).toBe('Line 1\n\nLine 3')
+    })
+
+    test('парсит промпт с одним сегментом', () => {
+        const raw = `$$begin
+$$user
+User prompt
+$$segment=aaa
+Segment aaa content
+$$end`
+
+        const result = PromtLoad(raw)
+
+        expect(result).toHaveLength(1)
+        expect(result[0].user).toBe('User prompt')
+        expect(result[0].segment).toEqual({ aaa: 'Segment aaa content' })
+    })
+
+    test('парсит промпт с несколькими сегментами', () => {
+        const raw = `$$begin
+$$user
+User prompt
+$$segment=aaa
+Content for aaa
+$$segment=bbb
+Content for bbb
+$$end`
+
+        const result = PromtLoad(raw)
+
+        expect(result).toHaveLength(1)
+        expect(result[0].user).toBe('User prompt')
+        expect(result[0].segment).toEqual({
+            aaa: 'Content for aaa',
+            bbb: 'Content for bbb'
+        })
+    })
+
+    test('парсит многострочный сегмент', () => {
+        const raw = `$$begin
+$$user
+User prompt
+$$segment=test
+Line 1
+Line 2
+Line 3
+$$end`
+
+        const result = PromtLoad(raw)
+
+        expect(result).toHaveLength(1)
+        expect(result[0].segment).toEqual({ test: 'Line 1\nLine 2\nLine 3' })
+    })
+
+    test('порядок с сегментами не важен', () => {
+        const raw = `$$begin
+$$segment=first
+First segment
+$$user
+User prompt
+$$system
+System prompt
+$$segment=second
+Second segment
+$$end`
+
+        const result = PromtLoad(raw)
+
+        expect(result).toHaveLength(1)
+        expect(result[0].user).toBe('User prompt')
+        expect(result[0].system).toBe('System prompt')
+        expect(result[0].segment).toEqual({
+            first: 'First segment',
+            second: 'Second segment'
+        })
     })
 })
 
@@ -243,7 +317,7 @@ $$end`)
     test('сериализует промпт с параметрами', () => {
         const promts: TPromt[] = [{
             user: 'Test',
-            param: {
+            options: {
                 key1: 'value1',
                 key2: 'value2'
             }
@@ -275,7 +349,7 @@ $$end`)
         const promts: TPromt[] = [{
             system: 'System prompt',
             user: 'User prompt',
-            param: {
+            options: {
                 model: 'gpt-4'
             }
         }]
@@ -290,6 +364,46 @@ $$end`)
         expect(result).toContain('User prompt')
         expect(result).toContain('$$end')
     })
+
+    test('сериализует промпт с сегментами', () => {
+        const promts: TPromt[] = [{
+            user: 'User prompt',
+            segment: {
+                aaa: 'Content for aaa',
+                bbb: 'Content for bbb'
+            }
+        }]
+
+        const result = PromtStore(promts)
+
+        expect(result).toContain('$$user')
+        expect(result).toContain('User prompt')
+        expect(result).toContain('$$segment=aaa')
+        expect(result).toContain('Content for aaa')
+        expect(result).toContain('$$segment=bbb')
+        expect(result).toContain('Content for bbb')
+    })
+
+    test('сериализует полный промпт со всеми опциями и сегментами', () => {
+        const promts: TPromt[] = [{
+            system: 'System',
+            user: 'User',
+            options: { key: 'value' },
+            segment: { seg1: 'Segment 1' }
+        }]
+
+        const result = PromtStore(promts)
+
+        expect(result).toContain('$$begin')
+        expect(result).toContain('$$@key=value')
+        expect(result).toContain('$$system')
+        expect(result).toContain('System')
+        expect(result).toContain('$$user')
+        expect(result).toContain('User')
+        expect(result).toContain('$$segment=seg1')
+        expect(result).toContain('Segment 1')
+        expect(result).toContain('$$end')
+    })
 })
 
 describe('PromtLoad + PromtStore round-trip', () => {
@@ -298,7 +412,7 @@ describe('PromtLoad + PromtStore round-trip', () => {
             {
                 system: 'System 1',
                 user: 'User 1',
-                param: {
+                options: {
                     key1: 'value1',
                     key2: 'value2'
                 }
@@ -318,10 +432,36 @@ describe('PromtLoad + PromtStore round-trip', () => {
         expect(parsed).toHaveLength(3)
         expect(parsed[0].system).toBe('System 1')
         expect(parsed[0].user).toBe('User 1')
-        expect(parsed[0].param).toEqual({ key1: 'value1', key2: 'value2' })
+        expect(parsed[0].options).toEqual({ key1: 'value1', key2: 'value2' })
         expect(parsed[1].user).toBe('User 2')
         expect(parsed[1].system).toBeUndefined()
         expect(parsed[2].system).toBe('System 3')
         expect(parsed[2].user).toBe('User 3')
+    })
+
+    test('сохраняет данные с сегментами при обратном преобразовании', () => {
+        const original: TPromt[] = [
+            {
+                system: 'System',
+                user: 'User',
+                options: { opt: 'val' },
+                segment: {
+                    seg1: 'Segment 1',
+                    seg2: 'Segment 2'
+                }
+            }
+        ]
+
+        const serialized = PromtStore(original)
+        const parsed = PromtLoad(serialized)
+
+        expect(parsed).toHaveLength(1)
+        expect(parsed[0].system).toBe('System')
+        expect(parsed[0].user).toBe('User')
+        expect(parsed[0].options).toEqual({ opt: 'val' })
+        expect(parsed[0].segment).toEqual({
+            seg1: 'Segment 1',
+            seg2: 'Segment 2'
+        })
     })
 })

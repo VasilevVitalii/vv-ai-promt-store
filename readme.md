@@ -38,6 +38,8 @@ $$system
 System prompt text here
 $$user
 User prompt text here
+$$segment=segmentName
+Segment content here
 $$end
 ```
 
@@ -47,10 +49,12 @@ $$end
 - `$$end` - End of a prompt block
 - `$$user` - User prompt (required)
 - `$$system` - System prompt (optional)
-- `$$@key=value` - Custom parameters (optional)
+- `$$@key=value` - Custom options (optional)
+- `$$segment=name` - Named text segments (optional)
 - Text before the first `$$begin` and after the last `$$end` is ignored
 - Section order within a block doesn't matter
 - All sections except `$$user` are optional
+- Multiple segments with different names can be defined
 
 ## Usage
 
@@ -74,7 +78,7 @@ console.log(prompts)
 // [{
 //   system: 'You are a helpful assistant',
 //   user: 'What is 2+2?',
-//   param: { model: 'gpt-4' }
+//   options: { model: 'gpt-4' }
 // }]
 ```
 
@@ -86,7 +90,7 @@ import { PromtStore, TPromt } from 'vv-ai-promt-store'
 const prompts: TPromt[] = [{
   system: 'You are a helpful assistant',
   user: 'Hello, world!',
-  param: {
+  options: {
     temperature: '0.7',
     model: 'gpt-4'
   }
@@ -127,6 +131,36 @@ const prompts = PromtLoad(text)
 console.log(prompts.length) // 2
 ```
 
+### Working with segments
+
+Segments allow you to store named blocks of text within a prompt:
+
+```typescript
+import { PromtLoad, PromtStore, TPromt } from 'vv-ai-promt-store'
+
+const prompts: TPromt[] = [{
+  user: 'Analyze this code',
+  segment: {
+    code: 'function hello() { return "world"; }',
+    tests: 'test("hello", () => { expect(hello()).toBe("world"); })'
+  }
+}]
+
+const text = PromtStore(prompts)
+console.log(text)
+// $$begin
+// $$user
+// Analyze this code
+// $$segment=code
+// function hello() { return "world"; }
+// $$segment=tests
+// test("hello", () => { expect(hello()).toBe("world"); })
+// $$end
+
+const parsed = PromtLoad(text)
+console.log(parsed[0].segment.code) // Access segment content
+```
+
 ## API
 
 ### Types
@@ -135,7 +169,8 @@ console.log(prompts.length) // 2
 type TPromt = {
   system?: string
   user: string
-  param?: Record<string, string>
+  options?: Record<string, string>
+  segment?: Record<string, string>
 }
 ```
 
