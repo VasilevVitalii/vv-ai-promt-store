@@ -33,7 +33,9 @@ The library uses a simple text format with special markers:
 
 ```
 $$begin
-$$@key=value
+$$options
+temperature=0.7
+maxTokens=4096
 $$system
 System prompt text here
 $$user
@@ -49,7 +51,7 @@ $$end
 - `$$end` - End of a prompt block
 - `$$user` - User prompt (required)
 - `$$system` - System prompt (optional)
-- `$$@key=value` - Custom options (optional)
+- `$$options` - LLM settings section (optional)
 - `$$segment=name` - Named text segments (optional)
 - Text before the first `$$begin` and after the last `$$end` is ignored
 - Section order within a block doesn't matter
@@ -65,7 +67,9 @@ import { PromtLoad } from 'vv-ai-promt-store'
 
 const text = `
 $$begin
-$$@model=gpt-4
+$$options
+temperature=0.7
+maxTokens=4096
 $$system
 You are a helpful assistant
 $$user
@@ -78,7 +82,7 @@ console.log(prompts)
 // [{
 //   system: 'You are a helpful assistant',
 //   user: 'What is 2+2?',
-//   options: { model: 'gpt-4' }
+//   options: { temperature: 0.7, maxTokens: 4096 }
 // }]
 ```
 
@@ -91,16 +95,17 @@ const prompts: TPromt[] = [{
   system: 'You are a helpful assistant',
   user: 'Hello, world!',
   options: {
-    temperature: '0.7',
-    model: 'gpt-4'
+    temperature: 0.7,
+    maxTokens: 4096
   }
 }]
 
 const text = PromtStore(prompts)
 console.log(text)
 // $$begin
-// $$@temperature=0.7
-// $$@model=gpt-4
+// $$options
+// temperature=0.7
+// maxTokens=4096
 // $$system
 // You are a helpful assistant
 // $$user
@@ -166,13 +171,52 @@ console.log(parsed[0].segment.code) // Access segment content
 ### Types
 
 ```typescript
+type TPromtOptions = {
+  temperature?: number
+  topP?: number
+  topK?: number
+  minP?: number
+  maxTokens?: number
+  repeatPenalty?: number
+  repeatPenaltyNum?: number
+  presencePenalty?: number
+  frequencyPenalty?: number
+  mirostat?: number
+  mirostatTau?: number
+  mirostatEta?: number
+  penalizeNewline?: boolean
+  stopSequences?: string[]
+  trimWhitespace?: boolean
+}
+
 type TPromt = {
   system?: string
   user: string
-  options?: Record<string, string>
+  options?: TPromtOptions
   segment?: Record<string, string>
 }
 ```
+
+#### Options format
+
+The `$$options` section supports various formats for values:
+
+**Numbers:**
+- Decimal: `0.7`, `2`, `2.4`
+- With comma separator: `0,7`, `2,4`
+- In quotes: `"0.7"`, `'0.9'`
+
+**Booleans:**
+- Standard: `true`, `false`
+- Numeric: `1`, `0`
+- Short: `y`, `n` (case insensitive)
+- In quotes: `"true"`, `'false'`
+
+**Arrays:**
+- JSON format: `stopSequences=["stop1", "stop2"]`
+
+**Undefined:**
+- Empty value: `minP=` (parameter will be undefined)
 
 ### Functions
 

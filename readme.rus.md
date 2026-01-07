@@ -33,7 +33,9 @@ npm install vv-ai-promt-store
 
 ```
 $$begin
-$$@ключ=значение
+$$options
+temperature=0.7
+maxTokens=4096
 $$system
 Текст системного промпта
 $$user
@@ -49,7 +51,7 @@ $$end
 - `$$end` - Конец блока промпта
 - `$$user` - Пользовательский промпт (обязательно)
 - `$$system` - Системный промпт (опционально)
-- `$$@ключ=значение` - Пользовательские опции (опционально)
+- `$$options` - Секция настроек LLM (опционально)
 - `$$segment=имя` - Именованные текстовые сегменты (опционально)
 - Текст до первого `$$begin` и после последнего `$$end` игнорируется
 - Порядок секций внутри блока не важен
@@ -65,7 +67,9 @@ import { PromtLoad } from 'vv-ai-promt-store'
 
 const text = `
 $$begin
-$$@model=gpt-4
+$$options
+temperature=0.7
+maxTokens=4096
 $$system
 Ты полезный ассистент
 $$user
@@ -78,7 +82,7 @@ console.log(prompts)
 // [{
 //   system: 'Ты полезный ассистент',
 //   user: 'Сколько будет 2+2?',
-//   options: { model: 'gpt-4' }
+//   options: { temperature: 0.7, maxTokens: 4096 }
 // }]
 ```
 
@@ -91,16 +95,17 @@ const prompts: TPromt[] = [{
   system: 'Ты полезный ассистент',
   user: 'Привет, мир!',
   options: {
-    temperature: '0.7',
-    model: 'gpt-4'
+    temperature: 0.7,
+    maxTokens: 4096
   }
 }]
 
 const text = PromtStore(prompts)
 console.log(text)
 // $$begin
-// $$@temperature=0.7
-// $$@model=gpt-4
+// $$options
+// temperature=0.7
+// maxTokens=4096
 // $$system
 // Ты полезный ассистент
 // $$user
@@ -166,13 +171,52 @@ console.log(parsed[0].segment.code) // Доступ к содержимому с
 ### Типы
 
 ```typescript
+type TPromtOptions = {
+  temperature?: number
+  topP?: number
+  topK?: number
+  minP?: number
+  maxTokens?: number
+  repeatPenalty?: number
+  repeatPenaltyNum?: number
+  presencePenalty?: number
+  frequencyPenalty?: number
+  mirostat?: number
+  mirostatTau?: number
+  mirostatEta?: number
+  penalizeNewline?: boolean
+  stopSequences?: string[]
+  trimWhitespace?: boolean
+}
+
 type TPromt = {
   system?: string
   user: string
-  options?: Record<string, string>
+  options?: TPromtOptions
   segment?: Record<string, string>
 }
 ```
+
+#### Формат options
+
+Секция `$$options` поддерживает различные форматы значений:
+
+**Числа:**
+- Десятичные: `0.7`, `2`, `2.4`
+- С запятой: `0,7`, `2,4`
+- В кавычках: `"0.7"`, `'0.9'`
+
+**Булевы значения:**
+- Стандартные: `true`, `false`
+- Числовые: `1`, `0`
+- Короткие: `y`, `n` (регистр не важен)
+- В кавычках: `"true"`, `'false'`
+
+**Массивы:**
+- Формат JSON: `stopSequences=["stop1", "stop2"]`
+
+**Undefined:**
+- Пустое значение: `minP=` (параметр будет undefined)
 
 ### Функции
 

@@ -32,8 +32,9 @@ $$end`
 
     test('парсит промпт с параметрами', () => {
         const raw = `$$begin
-$$@model=gpt-4
-$$@temperature=0.7
+$$options
+temperature=0.7
+maxTokens=4096
 $$user
 Test prompt
 $$end`
@@ -42,16 +43,17 @@ $$end`
 
         expect(result).toHaveLength(1)
         expect(result[0].options).toEqual({
-            model: 'gpt-4',
-            temperature: '0.7'
+            temperature: 0.7,
+            maxTokens: 4096
         })
         expect(result[0].user).toBe('Test prompt')
     })
 
     test('парсит промпт со всеми опциями', () => {
         const raw = `$$begin
-$$@key1=value1
-$$@key2=value2
+$$options
+temperature=0.5
+topP=0.9
 $$system
 System prompt here
 $$user
@@ -64,8 +66,8 @@ $$end`
         expect(result[0].system).toBe('System prompt here')
         expect(result[0].user).toBe('User prompt here')
         expect(result[0].options).toEqual({
-            key1: 'value1',
-            key2: 'value2'
+            temperature: 0.5,
+            topP: 0.9
         })
     })
 
@@ -166,7 +168,8 @@ $$end`
         const raw = `$$begin
 $$user
 User prompt
-$$@key=value
+$$options
+topK=10
 $$system
 System prompt
 $$end`
@@ -176,7 +179,7 @@ $$end`
         expect(result).toHaveLength(1)
         expect(result[0].user).toBe('User prompt')
         expect(result[0].system).toBe('System prompt')
-        expect(result[0].options).toEqual({ key: 'value' })
+        expect(result[0].options).toEqual({ topK: 10 })
     })
 
     test('возвращает пустой массив если нет промптов', () => {
@@ -207,6 +210,172 @@ $$end`
 
         expect(result).toHaveLength(1)
         expect(result[0].user).toBe('Line 1\n\nLine 3')
+    })
+
+    test('парсит числовые значения в options', () => {
+        const raw = `$$begin
+$$options
+temperature=0.7
+topP=0.9
+maxTokens=4096
+$$user
+Test
+$$end`
+
+        const result = PromtLoad(raw)
+
+        expect(result).toHaveLength(1)
+        expect(result[0].options).toEqual({
+            temperature: 0.7,
+            topP: 0.9,
+            maxTokens: 4096
+        })
+    })
+
+    test('парсит числа с запятой как разделителем', () => {
+        const raw = `$$begin
+$$options
+temperature=0,7
+topP=0,95
+$$user
+Test
+$$end`
+
+        const result = PromtLoad(raw)
+
+        expect(result).toHaveLength(1)
+        expect(result[0].options).toEqual({
+            temperature: 0.7,
+            topP: 0.95
+        })
+    })
+
+    test('парсит числа в кавычках', () => {
+        const raw = `$$begin
+$$options
+temperature="0.8"
+topP='0.9'
+$$user
+Test
+$$end`
+
+        const result = PromtLoad(raw)
+
+        expect(result).toHaveLength(1)
+        expect(result[0].options).toEqual({
+            temperature: 0.8,
+            topP: 0.9
+        })
+    })
+
+    test('парсит boolean значения', () => {
+        const raw = `$$begin
+$$options
+penalizeNewline=true
+trimWhitespace=false
+$$user
+Test
+$$end`
+
+        const result = PromtLoad(raw)
+
+        expect(result).toHaveLength(1)
+        expect(result[0].options).toEqual({
+            penalizeNewline: true,
+            trimWhitespace: false
+        })
+    })
+
+    test('парсит boolean значения 0/1', () => {
+        const raw = `$$begin
+$$options
+penalizeNewline=1
+trimWhitespace=0
+$$user
+Test
+$$end`
+
+        const result = PromtLoad(raw)
+
+        expect(result).toHaveLength(1)
+        expect(result[0].options).toEqual({
+            penalizeNewline: true,
+            trimWhitespace: false
+        })
+    })
+
+    test('парсит boolean значения y/n', () => {
+        const raw = `$$begin
+$$options
+penalizeNewline=y
+trimWhitespace=N
+$$user
+Test
+$$end`
+
+        const result = PromtLoad(raw)
+
+        expect(result).toHaveLength(1)
+        expect(result[0].options).toEqual({
+            penalizeNewline: true,
+            trimWhitespace: false
+        })
+    })
+
+    test('парсит массив stopSequences', () => {
+        const raw = `$$begin
+$$options
+stopSequences=["stop1", "stop2"]
+$$user
+Test
+$$end`
+
+        const result = PromtLoad(raw)
+
+        expect(result).toHaveLength(1)
+        expect(result[0].options).toEqual({
+            stopSequences: ['stop1', 'stop2']
+        })
+    })
+
+    test('парсит undefined значения (пустые)', () => {
+        const raw = `$$begin
+$$options
+temperature=0.7
+minP=
+maxTokens=1000
+$$user
+Test
+$$end`
+
+        const result = PromtLoad(raw)
+
+        expect(result).toHaveLength(1)
+        expect(result[0].options).toEqual({
+            temperature: 0.7,
+            maxTokens: 1000
+        })
+        expect(result[0].options?.minP).toBeUndefined()
+    })
+
+    test('игнорирует неизвестные ключи в options', () => {
+        const raw = `$$begin
+$$options
+temperature=0.7
+unknownKey=value
+maxTokens=1000
+$$user
+Test
+$$end`
+
+        const result = PromtLoad(raw)
+
+        expect(result).toHaveLength(1)
+        expect(result[0].options).toEqual({
+            temperature: 0.7,
+            maxTokens: 1000
+        })
+        expect((result[0].options as any).unknownKey).toBeUndefined()
     })
 
     test('парсит промпт с одним сегментом', () => {
@@ -318,15 +487,16 @@ $$end`)
         const promts: TPromt[] = [{
             user: 'Test',
             options: {
-                key1: 'value1',
-                key2: 'value2'
+                temperature: 0.7,
+                maxTokens: 2048
             }
         }]
 
         const result = PromtStore(promts)
 
-        expect(result).toContain('$$@key1=value1')
-        expect(result).toContain('$$@key2=value2')
+        expect(result).toContain('$$options')
+        expect(result).toContain('temperature=0.7')
+        expect(result).toContain('maxTokens=2048')
         expect(result).toContain('$$user')
         expect(result).toContain('Test')
     })
@@ -350,14 +520,17 @@ $$end`)
             system: 'System prompt',
             user: 'User prompt',
             options: {
-                model: 'gpt-4'
+                temperature: 0.8,
+                topP: 0.95
             }
         }]
 
         const result = PromtStore(promts)
 
         expect(result).toContain('$$begin')
-        expect(result).toContain('$$@model=gpt-4')
+        expect(result).toContain('$$options')
+        expect(result).toContain('temperature=0.8')
+        expect(result).toContain('topP=0.95')
         expect(result).toContain('$$system')
         expect(result).toContain('System prompt')
         expect(result).toContain('$$user')
@@ -388,14 +561,19 @@ $$end`)
         const promts: TPromt[] = [{
             system: 'System',
             user: 'User',
-            options: { key: 'value' },
+            options: {
+                temperature: 0.7,
+                trimWhitespace: true
+            },
             segment: { seg1: 'Segment 1' }
         }]
 
         const result = PromtStore(promts)
 
         expect(result).toContain('$$begin')
-        expect(result).toContain('$$@key=value')
+        expect(result).toContain('$$options')
+        expect(result).toContain('temperature=0.7')
+        expect(result).toContain('trimWhitespace=true')
         expect(result).toContain('$$system')
         expect(result).toContain('System')
         expect(result).toContain('$$user')
@@ -413,8 +591,8 @@ describe('PromtLoad + PromtStore round-trip', () => {
                 system: 'System 1',
                 user: 'User 1',
                 options: {
-                    key1: 'value1',
-                    key2: 'value2'
+                    temperature: 0.7,
+                    maxTokens: 1000
                 }
             },
             {
@@ -432,7 +610,7 @@ describe('PromtLoad + PromtStore round-trip', () => {
         expect(parsed).toHaveLength(3)
         expect(parsed[0].system).toBe('System 1')
         expect(parsed[0].user).toBe('User 1')
-        expect(parsed[0].options).toEqual({ key1: 'value1', key2: 'value2' })
+        expect(parsed[0].options).toEqual({ temperature: 0.7, maxTokens: 1000 })
         expect(parsed[1].user).toBe('User 2')
         expect(parsed[1].system).toBeUndefined()
         expect(parsed[2].system).toBe('System 3')
@@ -444,7 +622,10 @@ describe('PromtLoad + PromtStore round-trip', () => {
             {
                 system: 'System',
                 user: 'User',
-                options: { opt: 'val' },
+                options: {
+                    topK: 40,
+                    penalizeNewline: false
+                },
                 segment: {
                     seg1: 'Segment 1',
                     seg2: 'Segment 2'
@@ -458,7 +639,7 @@ describe('PromtLoad + PromtStore round-trip', () => {
         expect(parsed).toHaveLength(1)
         expect(parsed[0].system).toBe('System')
         expect(parsed[0].user).toBe('User')
-        expect(parsed[0].options).toEqual({ opt: 'val' })
+        expect(parsed[0].options).toEqual({ topK: 40, penalizeNewline: false })
         expect(parsed[0].segment).toEqual({
             seg1: 'Segment 1',
             seg2: 'Segment 2'
