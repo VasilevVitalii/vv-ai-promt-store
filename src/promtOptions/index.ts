@@ -70,6 +70,7 @@ export type TPromtOptionsOpenAi = {
 	seed?: number
 	stop?: string[]
 	logit_bias?: Record<string, number>
+	response_format?: any
 }
 
 export type TPromtOptionsOllama = {
@@ -110,4 +111,5 @@ export type TPromtOptionsLlamaCpp = {
 		penalizeNewLine?: boolean
 		punishTokensFilter?: (tokens: any[]) => any[]
 	}
+	grammar?: any
 }
