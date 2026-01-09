@@ -6,7 +6,7 @@ import { ConvertJsonSchemaToGbnf } from './convertJsonSchemaToGbnf.js'
  * Converts universal prompt options to OpenAI API format.
  *
  * @param options - Universal TPromtOptions object
- * @param response_format - Optional JSON Schema grammar string for structured output via OpenAI response_format
+ * @param jsonresponse - Optional JSON Schema grammar string for structured output via OpenAI response_format
  * @returns Options object formatted for OpenAI API with snake_case parameter names
  *
  * @remarks
@@ -17,8 +17,8 @@ import { ConvertJsonSchemaToGbnf } from './convertJsonSchemaToGbnf.js'
  * - `presencePenalty` → `presence_penalty`
  * - `stopSequences` → `stop` (only if non-empty)
  * - `tokenBias` → `logit_bias` (only if non-empty)
- * - If `response_format` parameter is provided and valid JSON Schema, creates OpenAI `response_format` object
- * - Invalid or empty `response_format` is ignored
+ * - If `jsonresponse` parameter is provided and valid JSON Schema, creates OpenAI `response_format` object
+ * - Invalid or empty `jsonresponse` is ignored
  * - Other parameters: `temperature`, `seed` (unchanged)
  *
  * @example
@@ -29,8 +29,8 @@ import { ConvertJsonSchemaToGbnf } from './convertJsonSchemaToGbnf.js'
  *   maxTokens: 2048,
  *   frequencyPenalty: 0.5
  * }
- * const response_format = '{"type": "object", "properties": {"name": {"type": "string"}}}'
- * const openaiOptions = ToPromtOptionsOpenAi(options, response_format)
+ * const jsonresponse = '{"type": "object", "properties": {"name": {"type": "string"}}}'
+ * const openaiOptions = ToPromtOptionsOpenAi(options, jsonresponse)
  * // Returns: {
  * //   temperature: 0.7,
  * //   top_p: 0.9,
@@ -47,7 +47,7 @@ import { ConvertJsonSchemaToGbnf } from './convertJsonSchemaToGbnf.js'
  * // }
  * ```
  */
-export function ToPromtOptionsOpenAi(options: TPromtOptions, response_format?: string): TPromtOptionsOpenAi {
+export function ToPromtOptionsOpenAi(options: TPromtOptions, jsonresponse?: string): TPromtOptionsOpenAi {
 	const result: TPromtOptionsOpenAi = {}
 
 	if (options.temperature !== undefined) result.temperature = options.temperature
@@ -63,11 +63,11 @@ export function ToPromtOptionsOpenAi(options: TPromtOptions, response_format?: s
 		result.logit_bias = options.tokenBias
 	}
 
-	if (response_format) {
-		const validationError = CheckJsonSchema(response_format)
+	if (jsonresponse) {
+		const validationError = CheckJsonSchema(jsonresponse)
 		if (!validationError) {
 			try {
-				const schema = JSON.parse(response_format)
+				const schema = JSON.parse(jsonresponse)
 				result.response_format = {
 					type: 'json_schema',
 					json_schema: {
@@ -77,7 +77,7 @@ export function ToPromtOptionsOpenAi(options: TPromtOptions, response_format?: s
 					}
 				}
 			} catch {
-				// Ignore response_format if parsing fails
+				// Ignore jsonresponse if parsing fails
 			}
 		}
 	}
@@ -144,7 +144,7 @@ export function ToPromtOptionsOllama(options: TPromtOptions): TPromtOptionsOllam
  * Converts universal prompt options to node-llama-cpp API format.
  *
  * @param options - Universal TPromtOptions object
- * @param grammar - Optional JSON Schema grammar string to convert to GBNF format
+ * @param jsonresponse - Optional JSON Schema string to convert to GBNF format
  * @returns Options object formatted for node-llama-cpp API with camelCase parameter names
  *
  * @remarks
@@ -158,7 +158,7 @@ export function ToPromtOptionsOllama(options: TPromtOptions): TPromtOptionsOllam
  *   - `frequencyPenalty` → `repeatPenalty.frequencyPenalty`
  *   - `presencePenalty` → `repeatPenalty.presencePenalty`
  *   - `penalizeNewline` → `repeatPenalty.penalizeNewLine`
- * - If `grammar` parameter is provided, converts JSON Schema to GBNF format
+ * - If `jsonresponse` parameter is provided, converts JSON Schema to GBNF format
  * - Other parameters remain in camelCase: `temperature`, `topP`, `topK`, `minP`, `maxTokens`, `seed`, `evaluationPriority`, `contextShiftSize`, `disableContextShift`
  *
  * @example
@@ -171,8 +171,8 @@ export function ToPromtOptionsOllama(options: TPromtOptions): TPromtOptionsOllam
  *   repeatPenaltyNum: 64,
  *   frequencyPenalty: 0.5
  * }
- * const grammar = '{"type": "object", "properties": {"name": {"type": "string"}}}'
- * const llamaCppOptions = ToPromtOptionsLlamaCpp(options, grammar)
+ * const jsonresponse = '{"type": "object", "properties": {"name": {"type": "string"}}}'
+ * const llamaCppOptions = ToPromtOptionsLlamaCpp(options, jsonresponse)
  * // Returns: {
  * //   temperature: 0.7,
  * //   topP: 0.9,
@@ -182,7 +182,7 @@ export function ToPromtOptionsOllama(options: TPromtOptions): TPromtOptionsOllam
  * //     lastTokens: 64,
  * //     frequencyPenalty: 0.5
  * //   },
- * //   grammar: { type: 'object', properties: { name: { type: 'string' } } }
+ * //   grammar: <grammar by jsonresponse>
  * // }
  * ```
  */

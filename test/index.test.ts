@@ -677,3 +677,143 @@ describe('PromtLoad + PromtStore round-trip', () => {
         expect(parsed[0].options).toEqual(original[0].options)
     })
 })
+
+describe('$$jsonresponse section', () => {
+    test('парсит промпт с секцией $$jsonresponse', () => {
+        const raw = `$$begin
+$$user
+Generate a JSON response
+$$jsonresponse
+{"type": "object", "properties": {"name": {"type": "string"}}}
+$$end`
+
+        const result = PromtLoad(raw)
+
+        expect(result).toHaveLength(1)
+        expect(result[0].user).toBe('Generate a JSON response')
+        expect(result[0].jsonresponse).toBe('{"type": "object", "properties": {"name": {"type": "string"}}}')
+    })
+
+    test('парсит многострочный JSON Schema в $$jsonresponse', () => {
+        const raw = `$$begin
+$$user
+Generate structured data
+$$jsonresponse
+{
+  "type": "object",
+  "properties": {
+    "name": {"type": "string"},
+    "age": {"type": "number"}
+  }
+}
+$$end`
+
+        const result = PromtLoad(raw)
+
+        expect(result).toHaveLength(1)
+        expect(result[0].jsonresponse).toContain('"type": "object"')
+        expect(result[0].jsonresponse).toContain('"name"')
+        expect(result[0].jsonresponse).toContain('"age"')
+    })
+
+    test('парсит промпт со всеми секциями включая $$jsonresponse', () => {
+        const raw = `$$begin
+$$system
+You are a helpful assistant
+$$user
+Generate user data
+$$options
+temperature=0.3
+maxTokens=1000
+$$jsonresponse
+{"type": "object", "required": ["name"]}
+$$end`
+
+        const result = PromtLoad(raw)
+
+        expect(result).toHaveLength(1)
+        expect(result[0].system).toBe('You are a helpful assistant')
+        expect(result[0].user).toBe('Generate user data')
+        expect(result[0].options).toEqual({ temperature: 0.3, maxTokens: 1000 })
+        expect(result[0].jsonresponse).toBe('{"type": "object", "required": ["name"]}')
+    })
+
+    test('сериализует промпт с jsonresponse в секцию $$jsonresponse', () => {
+        const promts: TPromt[] = [{
+            user: 'Generate JSON',
+            jsonresponse: '{"type": "string"}'
+        }]
+
+        const result = PromtStore(promts)
+
+        expect(result).toContain('$$jsonresponse')
+        expect(result).toContain('{"type": "string"}')
+    })
+
+    test('сериализует полный промпт с jsonresponse', () => {
+        const promts: TPromt[] = [{
+            system: 'System prompt',
+            user: 'User prompt',
+            options: {
+                temperature: 0.5,
+                maxTokens: 2048
+            },
+            jsonresponse: '{"type": "object", "properties": {}}'
+        }]
+
+        const result = PromtStore(promts)
+
+        expect(result).toContain('$$begin')
+        expect(result).toContain('$$options')
+        expect(result).toContain('temperature=0.5')
+        expect(result).toContain('$$system')
+        expect(result).toContain('System prompt')
+        expect(result).toContain('$$user')
+        expect(result).toContain('User prompt')
+        expect(result).toContain('$$jsonresponse')
+        expect(result).toContain('{"type": "object", "properties": {}}')
+        expect(result).toContain('$$end')
+    })
+
+    test('round-trip сохраняет jsonresponse через $$jsonresponse', () => {
+        const original: TPromt[] = [{
+            system: 'Generate data',
+            user: 'Create a user object',
+            options: {
+                temperature: 0.3,
+                maxTokens: 1500
+            },
+            jsonresponse: '{"type": "object", "properties": {"id": {"type": "number"}, "name": {"type": "string"}}}'
+        }]
+
+        const serialized = PromtStore(original)
+        const parsed = PromtLoad(serialized)
+
+        expect(parsed).toHaveLength(1)
+        expect(parsed[0].system).toBe(original[0].system)
+        expect(parsed[0].user).toBe(original[0].user)
+        expect(parsed[0].options).toEqual(original[0].options)
+        expect(parsed[0].jsonresponse).toBe(original[0].jsonresponse)
+    })
+
+    test('порядок секций с $$jsonresponse не важен', () => {
+        const raw = `$$begin
+$$jsonresponse
+{"type": "string"}
+$$user
+User prompt
+$$system
+System prompt
+$$options
+topK=40
+$$end`
+
+        const result = PromtLoad(raw)
+
+        expect(result).toHaveLength(1)
+        expect(result[0].user).toBe('User prompt')
+        expect(result[0].system).toBe('System prompt')
+        expect(result[0].options).toEqual({ topK: 40 })
+        expect(result[0].jsonresponse).toBe('{"type": "string"}')
+    })
+})

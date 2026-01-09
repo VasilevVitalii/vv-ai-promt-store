@@ -20,7 +20,7 @@ export type TPromt = {
 	user: string
 	options?: TPromtOptions
 	segment?: Record<string, string>
-	grammar?: string
+	jsonresponse?: string
 }
 
 import { TPromtOptions } from './promtOptions/index.js'

@@ -40,6 +40,8 @@ $$system
 Текст системного промпта
 $$user
 Текст пользовательского промпта
+$$jsonresponse
+{"type": "object", "properties": {"name": {"type": "string"}}}
 $$segment=имяСегмента
 Содержимое сегмента
 $$end
@@ -52,6 +54,7 @@ $$end
 - `$$user` - Пользовательский промпт (обязательно)
 - `$$system` - Системный промпт (опционально)
 - `$$options` - Секция настроек LLM (опционально)
+- `$$jsonresponse` - JSON Schema для структурированного вывода ответа (опционально)
 - `$$segment=имя` - Именованные текстовые сегменты (опционально)
 - Текст до первого `$$begin` и после последнего `$$end` игнорируется
 - Порядок секций внутри блока не важен
@@ -136,6 +139,39 @@ const prompts = PromtLoad(text)
 console.log(prompts.length) // 2
 ```
 
+### Работа с JSON Schema ответами
+
+Секция `$$jsonresponse` позволяет определить JSON Schema для структурированного вывода ответа. Это полезно, когда нужно, чтобы AI возвращал данные в определённом формате:
+
+```typescript
+import { PromtLoad, PromtStore, TPromt } from 'vv-ai-promt-store'
+
+const prompts: TPromt[] = [{
+  user: 'Сгенерируй профиль пользователя',
+  jsonresponse: JSON.stringify({
+    type: 'object',
+    required: ['name', 'age'],
+    properties: {
+      name: { type: 'string' },
+      age: { type: 'number' },
+      email: { type: 'string', format: 'email' }
+    }
+  })
+}]
+
+const text = PromtStore(prompts)
+console.log(text)
+// $$begin
+// $$user
+// Сгенерируй профиль пользователя
+// $$jsonresponse
+// {"type":"object","required":["name","age"],"properties":{"name":{"type":"string"},"age":{"type":"number"},"email":{"type":"string","format":"email"}}}
+// $$end
+
+const parsed = PromtLoad(text)
+console.log(JSON.parse(parsed[0].jsonresponse)) // Доступ к JSON Schema
+```
+
 ### Работа с сегментами
 
 Сегменты позволяют хранить именованные блоки текста внутри промпта:
@@ -194,6 +230,7 @@ type TPromt = {
   user: string
   options?: TPromtOptions
   segment?: Record<string, string>
+  jsonresponse?: string
 }
 ```
 

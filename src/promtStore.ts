@@ -20,7 +20,7 @@ import { TPromt, TPromtOptions } from './index.js'
  *   system: 'You are helpful',
  *   user: 'Hello!',
  *   options: { temperature: 0.7 },
- *   grammar: '{"type": "object"}'
+ *   jsonresponse: '{"type": "object"}'
  * }]
  *
  * const text = PromtStore(prompts)
@@ -62,9 +62,9 @@ function serialize(promts: TPromt[]): string {
 		result.push('$$user')
 		result.push(promt.user)
 
-		if (promt.grammar) {
+		if (promt.jsonresponse) {
 			result.push('$$jsonresponse')
-			result.push(promt.grammar)
+			result.push(promt.jsonresponse)
 		}
 
 		if (promt.segment) {

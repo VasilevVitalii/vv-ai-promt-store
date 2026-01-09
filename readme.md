@@ -40,6 +40,8 @@ $$system
 System prompt text here
 $$user
 User prompt text here
+$$jsonresponse
+{"type": "object", "properties": {"name": {"type": "string"}}}
 $$segment=segmentName
 Segment content here
 $$end
@@ -52,6 +54,7 @@ $$end
 - `$$user` - User prompt (required)
 - `$$system` - System prompt (optional)
 - `$$options` - LLM settings section (optional)
+- `$$jsonresponse` - JSON Schema for structured response output (optional)
 - `$$segment=name` - Named text segments (optional)
 - Text before the first `$$begin` and after the last `$$end` is ignored
 - Section order within a block doesn't matter
@@ -136,6 +139,39 @@ const prompts = PromtLoad(text)
 console.log(prompts.length) // 2
 ```
 
+### Working with JSON Schema responses
+
+The `$$jsonresponse` section allows you to define a JSON Schema for structured response output. This is useful when you need the AI to return data in a specific format:
+
+```typescript
+import { PromtLoad, PromtStore, TPromt } from 'vv-ai-promt-store'
+
+const prompts: TPromt[] = [{
+  user: 'Generate a user profile',
+  jsonresponse: JSON.stringify({
+    type: 'object',
+    required: ['name', 'age'],
+    properties: {
+      name: { type: 'string' },
+      age: { type: 'number' },
+      email: { type: 'string', format: 'email' }
+    }
+  })
+}]
+
+const text = PromtStore(prompts)
+console.log(text)
+// $$begin
+// $$user
+// Generate a user profile
+// $$jsonresponse
+// {"type":"object","required":["name","age"],"properties":{"name":{"type":"string"},"age":{"type":"number"},"email":{"type":"string","format":"email"}}}
+// $$end
+
+const parsed = PromtLoad(text)
+console.log(JSON.parse(parsed[0].jsonresponse)) // Access the JSON Schema
+```
+
 ### Working with segments
 
 Segments allow you to store named blocks of text within a prompt:
@@ -194,6 +230,7 @@ type TPromt = {
   user: string
   options?: TPromtOptions
   segment?: Record<string, string>
+  jsonresponse?: string
 }
 ```
 

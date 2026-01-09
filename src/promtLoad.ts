@@ -32,7 +32,7 @@ import { PromtOptionsParse } from './promtOptionsParse.js'
  * $$end`
  *
  * const prompts = PromtLoad(text)
- * // Returns: [{ system: '...', user: '...', options: {...}, grammar: '...' }]
+ * // Returns: [{ system: '...', user: '...', options: {...}, jsonresponse: '...' }]
  * ```
  */
 export function PromtLoad(raw: string, use: 'core' | 'json' = 'core'): TPromt[] {
@@ -173,7 +173,7 @@ function finishSection(promt: Partial<TPromt>, section: 'system' | 'user' | 'seg
 		const rawOptions = parseOptionsToObject(content)
 		promt.options = PromtOptionsParse(use, rawOptions, false)
 	} else if (section === 'jsonresponse') {
-		promt.grammar = content
+		promt.jsonresponse = content
 	}
 }
 
