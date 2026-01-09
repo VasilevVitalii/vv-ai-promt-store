@@ -186,7 +186,7 @@ export function ToPromtOptionsOllama(options: TPromtOptions): TPromtOptionsOllam
  * // }
  * ```
  */
-export function ToPromtOptionsLlamaCpp(options: TPromtOptions, grammar?: string): TPromtOptionsLlamaCpp {
+export function ToPromtOptionsLlamaCpp(options: TPromtOptions, jsonresponse?: string): TPromtOptionsLlamaCpp {
 	const result: TPromtOptionsLlamaCpp = {}
 
 	if (options.temperature !== undefined) result.temperature = options.temperature
@@ -222,15 +222,18 @@ export function ToPromtOptionsLlamaCpp(options: TPromtOptions, grammar?: string)
 		}
 	}
 
-	if (grammar) {
-		try {
-			const schema = JSON.parse(grammar)
-			const converted = ConvertJsonSchemaToGbnf(schema)
-			if ('result' in converted) {
-				result.grammar = converted.result
+	if (jsonresponse) {
+		const validationError = CheckJsonSchema(jsonresponse)
+		if (!validationError) {
+			try {
+				const schema = JSON.parse(jsonresponse)
+				const converted = ConvertJsonSchemaToGbnf(schema)
+				if ('result' in converted) {
+					result.grammar = converted.result
+				}
+			} catch {
+				// Ignore jsonresponse if parsing fails
 			}
-		} catch {
-			// Ignore grammar if parsing fails
 		}
 	}
 
