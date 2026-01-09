@@ -9,10 +9,10 @@ import { TPromt, TPromtOptions } from './index.js'
  * @remarks
  * Output format structure:
  * - Each prompt is wrapped in `$$begin` / `$$end`
- * - Sections are ordered: $$options, $$system, $$user, $$grammar, $$segment=*
+ * - Sections are ordered: $$options, $$system, $$user, $$jsonresponse, $$segment=*
  * - Options are serialized in key=value format
- * - Arrays are serialized as JSON
- * - Grammar is stored as formatted JSON Schema
+ * - Arrays and objects are serialized as JSON
+ * - JSON response schema is stored as formatted JSON Schema
  *
  * @example
  * ```typescript
@@ -32,7 +32,7 @@ import { TPromt, TPromtOptions } from './index.js'
  * // You are helpful
  * // $$user
  * // Hello!
- * // $$grammar
+ * // $$jsonresponse
  * // {"type": "object"}
  * // $$end
  * ```
@@ -63,7 +63,7 @@ function serialize(promts: TPromt[]): string {
 		result.push(promt.user)
 
 		if (promt.grammar) {
-			result.push('$$grammar')
+			result.push('$$jsonresponse')
 			result.push(promt.grammar)
 		}
 

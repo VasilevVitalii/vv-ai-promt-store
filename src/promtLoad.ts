@@ -14,7 +14,7 @@ import { PromtOptionsParse } from './promtOptionsParse.js'
  * - `$$system` - System message (optional)
  * - `$$user` - User message (required)
  * - `$$options` - Model parameters in key=value format (optional)
- * - `$$grammar` - JSON Schema grammar for structured output (optional)
+ * - `$$jsonresponse` - JSON Schema for structured response output (optional)
  * - `$$segment=name` - Named content segments (optional)
  *
  * @example
@@ -27,7 +27,7 @@ import { PromtOptionsParse } from './promtOptionsParse.js'
  * You are a helpful assistant
  * $$user
  * Hello, world!
- * $$grammar
+ * $$jsonresponse
  * {"type": "object", "properties": {}}
  * $$end`
  *
@@ -45,7 +45,7 @@ function parse(content: string, use: 'core' | 'json'): TPromt[] {
 
 	let inBlock = false
 	let currentPromt: Partial<TPromt> | null = null
-	let currentSection: 'system' | 'user' | 'segment' | 'options' | 'grammar' | null = null
+	let currentSection: 'system' | 'user' | 'segment' | 'options' | 'jsonresponse' | null = null
 	let currentSegmentName: string | null = null
 	let sectionContent: string[] = []
 
@@ -121,11 +121,11 @@ function parse(content: string, use: 'core' | 'json'): TPromt[] {
 			continue
 		}
 
-		if (trimmed === '$$grammar') {
+		if (trimmed === '$$jsonresponse') {
 			if (currentSection && sectionContent.length > 0) {
 				finishSection(currentPromt, currentSection, sectionContent, use, currentSegmentName)
 			}
-			currentSection = 'grammar'
+			currentSection = 'jsonresponse'
 			currentSegmentName = null
 			sectionContent = []
 			continue
@@ -158,7 +158,7 @@ function parse(content: string, use: 'core' | 'json'): TPromt[] {
 	return promts
 }
 
-function finishSection(promt: Partial<TPromt>, section: 'system' | 'user' | 'segment' | 'options' | 'grammar', lines: string[], use: 'core' | 'json', segmentName?: string | null): void {
+function finishSection(promt: Partial<TPromt>, section: 'system' | 'user' | 'segment' | 'options' | 'jsonresponse', lines: string[], use: 'core' | 'json', segmentName?: string | null): void {
 	const content = lines.join('\n').trim()
 	if (section === 'system') {
 		promt.system = content
@@ -172,7 +172,7 @@ function finishSection(promt: Partial<TPromt>, section: 'system' | 'user' | 'seg
 	} else if (section === 'options') {
 		const rawOptions = parseOptionsToObject(content)
 		promt.options = PromtOptionsParse(use, rawOptions, false)
-	} else if (section === 'grammar') {
+	} else if (section === 'jsonresponse') {
 		promt.grammar = content
 	}
 }
