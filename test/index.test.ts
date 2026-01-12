@@ -1,13 +1,13 @@
-import { PromtLoad, PromtStore, TPromt } from '../src/index.js'
+import { PromptConvFromString, PromptConvToString, TPrompt } from '../src/index.js'
 
-describe('PromtLoad', () => {
+describe('PromptConvFromString', () => {
     test('парсит простой промпт с только user', () => {
         const raw = `$$begin
 $$user
 Hello World
 $$end`
 
-        const result = PromtLoad(raw)
+        const result = PromptConvFromString(raw)
 
         expect(result).toHaveLength(1)
         expect(result[0].user).toBe('Hello World')
@@ -23,7 +23,7 @@ $$user
 What is 2+2?
 $$end`
 
-        const result = PromtLoad(raw)
+        const result = PromptConvFromString(raw)
 
         expect(result).toHaveLength(1)
         expect(result[0].system).toBe('You are a helpful assistant')
@@ -39,7 +39,7 @@ $$user
 Test prompt
 $$end`
 
-        const result = PromtLoad(raw)
+        const result = PromptConvFromString(raw)
 
         expect(result).toHaveLength(1)
         expect(result[0].options).toEqual({
@@ -60,7 +60,7 @@ $$user
 User prompt here
 $$end`
 
-        const result = PromtLoad(raw)
+        const result = PromptConvFromString(raw)
 
         expect(result).toHaveLength(1)
         expect(result[0].system).toBe('System prompt here')
@@ -81,7 +81,7 @@ $$user
 Second prompt
 $$end`
 
-        const result = PromtLoad(raw)
+        const result = PromptConvFromString(raw)
 
         expect(result).toHaveLength(2)
         expect(result[0].user).toBe('First prompt')
@@ -96,7 +96,7 @@ $$user
 Actual prompt
 $$end`
 
-        const result = PromtLoad(raw)
+        const result = PromptConvFromString(raw)
 
         expect(result).toHaveLength(1)
         expect(result[0].user).toBe('Actual prompt')
@@ -110,7 +110,7 @@ $$end
 This is some random text
 That should be ignored`
 
-        const result = PromtLoad(raw)
+        const result = PromptConvFromString(raw)
 
         expect(result).toHaveLength(1)
         expect(result[0].user).toBe('Actual prompt')
@@ -127,7 +127,7 @@ $$user
 Second
 $$end`
 
-        const result = PromtLoad(raw)
+        const result = PromptConvFromString(raw)
 
         expect(result).toHaveLength(2)
         expect(result[0].user).toBe('First')
@@ -142,7 +142,7 @@ Line 2
 Line 3
 $$end`
 
-        const result = PromtLoad(raw)
+        const result = PromptConvFromString(raw)
 
         expect(result).toHaveLength(1)
         expect(result[0].user).toBe('Line 1\nLine 2\nLine 3')
@@ -157,7 +157,7 @@ $$user
 User prompt
 $$end`
 
-        const result = PromtLoad(raw)
+        const result = PromptConvFromString(raw)
 
         expect(result).toHaveLength(1)
         expect(result[0].system).toBe('System line 1\nSystem line 2')
@@ -174,7 +174,7 @@ $$system
 System prompt
 $$end`
 
-        const result = PromtLoad(raw)
+        const result = PromptConvFromString(raw)
 
         expect(result).toHaveLength(1)
         expect(result[0].user).toBe('User prompt')
@@ -184,7 +184,7 @@ $$end`
 
     test('возвращает пустой массив если нет промптов', () => {
         const raw = `Just some text without prompts`
-        const result = PromtLoad(raw)
+        const result = PromptConvFromString(raw)
         expect(result).toHaveLength(0)
     })
 
@@ -194,7 +194,7 @@ $$system
 Only system, no user
 $$end`
 
-        const result = PromtLoad(raw)
+        const result = PromptConvFromString(raw)
         expect(result).toHaveLength(0)
     })
 
@@ -206,7 +206,7 @@ Line 1
 Line 3
 $$end`
 
-        const result = PromtLoad(raw)
+        const result = PromptConvFromString(raw)
 
         expect(result).toHaveLength(1)
         expect(result[0].user).toBe('Line 1\n\nLine 3')
@@ -222,7 +222,7 @@ $$user
 Test
 $$end`
 
-        const result = PromtLoad(raw)
+        const result = PromptConvFromString(raw)
 
         expect(result).toHaveLength(1)
         expect(result[0].options).toEqual({
@@ -241,7 +241,7 @@ $$user
 Test
 $$end`
 
-        const result = PromtLoad(raw)
+        const result = PromptConvFromString(raw)
 
         expect(result).toHaveLength(1)
         expect(result[0].options).toEqual({
@@ -259,7 +259,7 @@ $$user
 Test
 $$end`
 
-        const result = PromtLoad(raw)
+        const result = PromptConvFromString(raw)
 
         expect(result).toHaveLength(1)
         expect(result[0].options).toEqual({
@@ -277,7 +277,7 @@ $$user
 Test
 $$end`
 
-        const result = PromtLoad(raw)
+        const result = PromptConvFromString(raw)
 
         expect(result).toHaveLength(1)
         expect(result[0].options).toEqual({
@@ -295,7 +295,7 @@ $$user
 Test
 $$end`
 
-        const result = PromtLoad(raw)
+        const result = PromptConvFromString(raw)
 
         expect(result).toHaveLength(1)
         expect(result[0].options).toEqual({
@@ -313,7 +313,7 @@ $$user
 Test
 $$end`
 
-        const result = PromtLoad(raw)
+        const result = PromptConvFromString(raw)
 
         expect(result).toHaveLength(1)
         expect(result[0].options).toEqual({
@@ -330,7 +330,7 @@ $$user
 Test
 $$end`
 
-        const result = PromtLoad(raw)
+        const result = PromptConvFromString(raw)
 
         expect(result).toHaveLength(1)
         expect(result[0].options).toEqual({
@@ -348,7 +348,7 @@ $$user
 Test
 $$end`
 
-        const result = PromtLoad(raw)
+        const result = PromptConvFromString(raw)
 
         expect(result).toHaveLength(1)
         expect(result[0].options).toEqual({
@@ -368,7 +368,7 @@ $$user
 Test
 $$end`
 
-        const result = PromtLoad(raw)
+        const result = PromptConvFromString(raw)
 
         expect(result).toHaveLength(1)
         expect(result[0].options).toEqual({
@@ -386,7 +386,7 @@ $$segment=aaa
 Segment aaa content
 $$end`
 
-        const result = PromtLoad(raw)
+        const result = PromptConvFromString(raw)
 
         expect(result).toHaveLength(1)
         expect(result[0].user).toBe('User prompt')
@@ -403,7 +403,7 @@ $$segment=bbb
 Content for bbb
 $$end`
 
-        const result = PromtLoad(raw)
+        const result = PromptConvFromString(raw)
 
         expect(result).toHaveLength(1)
         expect(result[0].user).toBe('User prompt')
@@ -423,7 +423,7 @@ Line 2
 Line 3
 $$end`
 
-        const result = PromtLoad(raw)
+        const result = PromptConvFromString(raw)
 
         expect(result).toHaveLength(1)
         expect(result[0].segment).toEqual({ test: 'Line 1\nLine 2\nLine 3' })
@@ -441,7 +441,7 @@ $$segment=second
 Second segment
 $$end`
 
-        const result = PromtLoad(raw)
+        const result = PromptConvFromString(raw)
 
         expect(result).toHaveLength(1)
         expect(result[0].user).toBe('User prompt')
@@ -453,13 +453,13 @@ $$end`
     })
 })
 
-describe('PromtStore', () => {
+describe('PromptConvToString', () => {
     test('сериализует простой промпт', () => {
-        const promts: TPromt[] = [{
+        const prompts: TPrompt[] = [{
             user: 'Hello World'
         }]
 
-        const result = PromtStore(promts)
+        const result = PromptConvToString(prompts)
 
         expect(result).toBe(`$$begin
 $$user
@@ -468,12 +468,12 @@ $$end`)
     })
 
     test('сериализует промпт с system', () => {
-        const promts: TPromt[] = [{
+        const prompts: TPrompt[] = [{
             system: 'You are helpful',
             user: 'Hello'
         }]
 
-        const result = PromtStore(promts)
+        const result = PromptConvToString(prompts)
 
         expect(result).toBe(`$$begin
 $$system
@@ -484,7 +484,7 @@ $$end`)
     })
 
     test('сериализует промпт с параметрами', () => {
-        const promts: TPromt[] = [{
+        const prompts: TPrompt[] = [{
             user: 'Test',
             options: {
                 temperature: 0.7,
@@ -492,7 +492,7 @@ $$end`)
             }
         }]
 
-        const result = PromtStore(promts)
+        const result = PromptConvToString(prompts)
 
         expect(result).toContain('$$options')
         expect(result).toContain('temperature=0.7')
@@ -502,12 +502,12 @@ $$end`)
     })
 
     test('сериализует несколько промптов', () => {
-        const promts: TPromt[] = [
+        const prompts: TPrompt[] = [
             { user: 'First' },
             { user: 'Second' }
         ]
 
-        const result = PromtStore(promts)
+        const result = PromptConvToString(prompts)
 
         expect(result).toContain('First')
         expect(result).toContain('Second')
@@ -516,7 +516,7 @@ $$end`)
     })
 
     test('сериализует полный промпт', () => {
-        const promts: TPromt[] = [{
+        const prompts: TPrompt[] = [{
             system: 'System prompt',
             user: 'User prompt',
             options: {
@@ -525,7 +525,7 @@ $$end`)
             }
         }]
 
-        const result = PromtStore(promts)
+        const result = PromptConvToString(prompts)
 
         expect(result).toContain('$$begin')
         expect(result).toContain('$$options')
@@ -539,7 +539,7 @@ $$end`)
     })
 
     test('сериализует промпт с сегментами', () => {
-        const promts: TPromt[] = [{
+        const prompts: TPrompt[] = [{
             user: 'User prompt',
             segment: {
                 aaa: 'Content for aaa',
@@ -547,7 +547,7 @@ $$end`)
             }
         }]
 
-        const result = PromtStore(promts)
+        const result = PromptConvToString(prompts)
 
         expect(result).toContain('$$user')
         expect(result).toContain('User prompt')
@@ -558,7 +558,7 @@ $$end`)
     })
 
     test('сериализует полный промпт со всеми опциями и сегментами', () => {
-        const promts: TPromt[] = [{
+        const prompts: TPrompt[] = [{
             system: 'System',
             user: 'User',
             options: {
@@ -568,7 +568,7 @@ $$end`)
             segment: { seg1: 'Segment 1' }
         }]
 
-        const result = PromtStore(promts)
+        const result = PromptConvToString(prompts)
 
         expect(result).toContain('$$begin')
         expect(result).toContain('$$options')
@@ -584,9 +584,9 @@ $$end`)
     })
 })
 
-describe('PromtLoad + PromtStore round-trip', () => {
+describe('PromptConvFromString + PromptConvToString round-trip', () => {
     test('сохраняет данные при обратном преобразовании', () => {
-        const original: TPromt[] = [
+        const original: TPrompt[] = [
             {
                 system: 'System 1',
                 user: 'User 1',
@@ -604,8 +604,8 @@ describe('PromtLoad + PromtStore round-trip', () => {
             }
         ]
 
-        const serialized = PromtStore(original)
-        const parsed = PromtLoad(serialized)
+        const serialized = PromptConvToString(original)
+        const parsed = PromptConvFromString(serialized)
 
         expect(parsed).toHaveLength(3)
         expect(parsed[0].system).toBe('System 1')
@@ -618,7 +618,7 @@ describe('PromtLoad + PromtStore round-trip', () => {
     })
 
     test('сохраняет данные с сегментами при обратном преобразовании', () => {
-        const original: TPromt[] = [
+        const original: TPrompt[] = [
             {
                 system: 'System',
                 user: 'User',
@@ -633,8 +633,8 @@ describe('PromtLoad + PromtStore round-trip', () => {
             }
         ]
 
-        const serialized = PromtStore(original)
-        const parsed = PromtLoad(serialized)
+        const serialized = PromptConvToString(original)
+        const parsed = PromptConvFromString(serialized)
 
         expect(parsed).toHaveLength(1)
         expect(parsed[0].system).toBe('System')
@@ -647,7 +647,7 @@ describe('PromtLoad + PromtStore round-trip', () => {
     })
 
     test('сохраняет все параметры включая tokenBias и массивы при round-trip', () => {
-        const original: TPromt[] = [
+        const original: TPrompt[] = [
             {
                 system: 'Test system',
                 user: 'Test user',
@@ -670,8 +670,8 @@ describe('PromtLoad + PromtStore round-trip', () => {
             }
         ]
 
-        const serialized = PromtStore(original)
-        const parsed = PromtLoad(serialized)
+        const serialized = PromptConvToString(original)
+        const parsed = PromptConvFromString(serialized)
 
         expect(parsed).toHaveLength(1)
         expect(parsed[0].options).toEqual(original[0].options)
@@ -687,7 +687,7 @@ $$jsonresponse
 {"type": "object", "properties": {"name": {"type": "string"}}}
 $$end`
 
-        const result = PromtLoad(raw)
+        const result = PromptConvFromString(raw)
 
         expect(result).toHaveLength(1)
         expect(result[0].user).toBe('Generate a JSON response')
@@ -708,7 +708,7 @@ $$jsonresponse
 }
 $$end`
 
-        const result = PromtLoad(raw)
+        const result = PromptConvFromString(raw)
 
         expect(result).toHaveLength(1)
         expect(result[0].jsonresponse).toContain('"type": "object"')
@@ -729,7 +729,7 @@ $$jsonresponse
 {"type": "object", "required": ["name"]}
 $$end`
 
-        const result = PromtLoad(raw)
+        const result = PromptConvFromString(raw)
 
         expect(result).toHaveLength(1)
         expect(result[0].system).toBe('You are a helpful assistant')
@@ -739,19 +739,19 @@ $$end`
     })
 
     test('сериализует промпт с jsonresponse в секцию $$jsonresponse', () => {
-        const promts: TPromt[] = [{
+        const prompts: TPrompt[] = [{
             user: 'Generate JSON',
             jsonresponse: '{"type": "string"}'
         }]
 
-        const result = PromtStore(promts)
+        const result = PromptConvToString(prompts)
 
         expect(result).toContain('$$jsonresponse')
         expect(result).toContain('{"type": "string"}')
     })
 
     test('сериализует полный промпт с jsonresponse', () => {
-        const promts: TPromt[] = [{
+        const prompts: TPrompt[] = [{
             system: 'System prompt',
             user: 'User prompt',
             options: {
@@ -761,7 +761,7 @@ $$end`
             jsonresponse: '{"type": "object", "properties": {}}'
         }]
 
-        const result = PromtStore(promts)
+        const result = PromptConvToString(prompts)
 
         expect(result).toContain('$$begin')
         expect(result).toContain('$$options')
@@ -776,7 +776,7 @@ $$end`
     })
 
     test('round-trip сохраняет jsonresponse через $$jsonresponse', () => {
-        const original: TPromt[] = [{
+        const original: TPrompt[] = [{
             system: 'Generate data',
             user: 'Create a user object',
             options: {
@@ -786,8 +786,8 @@ $$end`
             jsonresponse: '{"type": "object", "properties": {"id": {"type": "number"}, "name": {"type": "string"}}}'
         }]
 
-        const serialized = PromtStore(original)
-        const parsed = PromtLoad(serialized)
+        const serialized = PromptConvToString(original)
+        const parsed = PromptConvFromString(serialized)
 
         expect(parsed).toHaveLength(1)
         expect(parsed[0].system).toBe(original[0].system)
@@ -808,7 +808,7 @@ $$options
 topK=40
 $$end`
 
-        const result = PromtLoad(raw)
+        const result = PromptConvFromString(raw)
 
         expect(result).toHaveLength(1)
         expect(result[0].user).toBe('User prompt')

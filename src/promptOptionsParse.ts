@@ -1,4 +1,4 @@
-import { TPromtOptions, SPromtOptions, SPromtOptionsJson, defVal, defValJson } from './promtOptions/index.js'
+import { TPromptOptions, SPromptOptions, SPromptOptionsJson, defVal, defValJson } from './promptOptions/index.js'
 import { Value } from '@sinclair/typebox/value'
 
 /**
@@ -7,25 +7,25 @@ import { Value } from '@sinclair/typebox/value'
  * @param use - Schema type to use: 'core' for standard AI models, 'json' for structured JSON output
  * @param raw - Raw object containing option values to parse
  * @param useAllOptions - If true, returns all options with defaults; if false, returns only specified options (default: true)
- * @returns Validated TPromtOptions object. Invalid values are replaced with defaults. Never throws errors.
+ * @returns Validated TPromptOptions object. Invalid values are replaced with defaults. Never throws errors.
  *
  * @example
  * ```typescript
  * // Get all options with defaults
- * const options = PromtOptionsParse('core', { temperature: 0.7 })
+ * const options = PromptOptionsParse('core', { temperature: 0.7 })
  * // Returns: { temperature: 0.7, topP: 0.9, topK: 40, ... all other defaults }
  *
  * // Get only specified options
- * const options = PromtOptionsParse('core', { temperature: 0.7 }, false)
+ * const options = PromptOptionsParse('core', { temperature: 0.7 }, false)
  * // Returns: { temperature: 0.7 }
  * ```
  */
-export function PromtOptionsParse(use: 'core' | 'json', raw?: object, useAllOptions: boolean = true): TPromtOptions {
-	const schema = use === 'core' ? SPromtOptions : SPromtOptionsJson
+export function PromptOptionsParse(use: 'core' | 'json', raw?: object, useAllOptions: boolean = true): TPromptOptions {
+	const schema = use === 'core' ? SPromptOptions : SPromptOptionsJson
 	const defaults = use === 'core' ? defVal : defValJson
 	const input = raw && typeof raw === 'object' ? raw : {}
 
-	const result: TPromtOptions = {}
+	const result: TPromptOptions = {}
 
 	for (const key of Object.keys(defaults) as (keyof typeof defaults)[]) {
 		const inputValue = (input as any)[key]

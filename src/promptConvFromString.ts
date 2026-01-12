@@ -1,12 +1,12 @@
-import { TPromt, TPromtOptions } from './index.js'
-import { PromtOptionsParse } from './promtOptionsParse.js'
+import { TPrompt, TPromptOptions } from './index.js'
+import { PromptOptionsParse } from './promptOptionsParse.js'
 
 /**
  * Loads and parses prompts from a text string with structured sections.
  *
  * @param raw - Raw text string containing prompts in the format with $$begin/$$end markers
  * @param use - Schema type for options validation: 'core' for standard AI models, 'json' for structured JSON output (default: 'core')
- * @returns Array of parsed TPromt objects
+ * @returns Array of parsed TPrompt objects
  *
  * @remarks
  * Text format supports the following sections:
@@ -31,20 +31,20 @@ import { PromtOptionsParse } from './promtOptionsParse.js'
  * {"type": "object", "properties": {}}
  * $$end`
  *
- * const prompts = PromtLoad(text)
+ * const prompts = PromptConvFromString(text)
  * // Returns: [{ system: '...', user: '...', options: {...}, jsonresponse: '...' }]
  * ```
  */
-export function PromtLoad(raw: string, use: 'core' | 'json' = 'core'): TPromt[] {
+export function PromptConvFromString(raw: string, use: 'core' | 'json' = 'core'): TPrompt[] {
 	return parse(raw, use)
 }
 
-function parse(content: string, use: 'core' | 'json'): TPromt[] {
+function parse(content: string, use: 'core' | 'json'): TPrompt[] {
 	const lines = content.split('\n')
-	const promts: TPromt[] = []
+	const prompts: TPrompt[] = []
 
 	let inBlock = false
-	let currentPromt: Partial<TPromt> | null = null
+	let currentPrompt: Partial<TPrompt> | null = null
 	let currentSection: 'system' | 'user' | 'segment' | 'options' | 'jsonresponse' | null = null
 	let currentSegmentName: string | null = null
 	let sectionContent: string[] = []
@@ -54,16 +54,16 @@ function parse(content: string, use: 'core' | 'json'): TPromt[] {
 		const trimmed = line.trim()
 
 		if (trimmed === '$$begin') {
-			if (inBlock && currentPromt) {
+			if (inBlock && currentPrompt) {
 				if (currentSection && sectionContent.length > 0) {
-					finishSection(currentPromt, currentSection, sectionContent, use, currentSegmentName)
+					finishSection(currentPrompt, currentSection, sectionContent, use, currentSegmentName)
 				}
-				if (currentPromt.user) {
-					promts.push(currentPromt as TPromt)
+				if (currentPrompt.user) {
+					prompts.push(currentPrompt as TPrompt)
 				}
 			}
 			inBlock = true
-			currentPromt = {}
+			currentPrompt = {}
 			currentSection = null
 			currentSegmentName = null
 			sectionContent = []
@@ -71,29 +71,29 @@ function parse(content: string, use: 'core' | 'json'): TPromt[] {
 		}
 
 		if (trimmed === '$$end') {
-			if (inBlock && currentPromt) {
+			if (inBlock && currentPrompt) {
 				if (currentSection && sectionContent.length > 0) {
-					finishSection(currentPromt, currentSection, sectionContent, use, currentSegmentName)
+					finishSection(currentPrompt, currentSection, sectionContent, use, currentSegmentName)
 				}
-				if (currentPromt.user) {
-					promts.push(currentPromt as TPromt)
+				if (currentPrompt.user) {
+					prompts.push(currentPrompt as TPrompt)
 				}
 			}
 			inBlock = false
-			currentPromt = null
+			currentPrompt = null
 			currentSection = null
 			currentSegmentName = null
 			sectionContent = []
 			continue
 		}
 
-		if (!inBlock || !currentPromt) {
+		if (!inBlock || !currentPrompt) {
 			continue
 		}
 
 		if (trimmed === '$$system') {
 			if (currentSection && sectionContent.length > 0) {
-				finishSection(currentPromt, currentSection, sectionContent, use, currentSegmentName)
+				finishSection(currentPrompt, currentSection, sectionContent, use, currentSegmentName)
 			}
 			currentSection = 'system'
 			currentSegmentName = null
@@ -103,7 +103,7 @@ function parse(content: string, use: 'core' | 'json'): TPromt[] {
 
 		if (trimmed === '$$user') {
 			if (currentSection && sectionContent.length > 0) {
-				finishSection(currentPromt, currentSection, sectionContent, use, currentSegmentName)
+				finishSection(currentPrompt, currentSection, sectionContent, use, currentSegmentName)
 			}
 			currentSection = 'user'
 			currentSegmentName = null
@@ -113,7 +113,7 @@ function parse(content: string, use: 'core' | 'json'): TPromt[] {
 
 		if (trimmed === '$$options') {
 			if (currentSection && sectionContent.length > 0) {
-				finishSection(currentPromt, currentSection, sectionContent, use, currentSegmentName)
+				finishSection(currentPrompt, currentSection, sectionContent, use, currentSegmentName)
 			}
 			currentSection = 'options'
 			currentSegmentName = null
@@ -123,7 +123,7 @@ function parse(content: string, use: 'core' | 'json'): TPromt[] {
 
 		if (trimmed === '$$jsonresponse') {
 			if (currentSection && sectionContent.length > 0) {
-				finishSection(currentPromt, currentSection, sectionContent, use, currentSegmentName)
+				finishSection(currentPrompt, currentSection, sectionContent, use, currentSegmentName)
 			}
 			currentSection = 'jsonresponse'
 			currentSegmentName = null
@@ -133,7 +133,7 @@ function parse(content: string, use: 'core' | 'json'): TPromt[] {
 
 		if (trimmed.startsWith('$$segment=')) {
 			if (currentSection && sectionContent.length > 0) {
-				finishSection(currentPromt, currentSection, sectionContent, use, currentSegmentName)
+				finishSection(currentPrompt, currentSection, sectionContent, use, currentSegmentName)
 			}
 			currentSection = 'segment'
 			currentSegmentName = trimmed.substring('$$segment='.length).trim()
@@ -146,34 +146,34 @@ function parse(content: string, use: 'core' | 'json'): TPromt[] {
 		}
 	}
 
-	if (inBlock && currentPromt) {
+	if (inBlock && currentPrompt) {
 		if (currentSection && sectionContent.length > 0) {
-			finishSection(currentPromt, currentSection, sectionContent, use, currentSegmentName)
+			finishSection(currentPrompt, currentSection, sectionContent, use, currentSegmentName)
 		}
-		if (currentPromt.user) {
-			promts.push(currentPromt as TPromt)
+		if (currentPrompt.user) {
+			prompts.push(currentPrompt as TPrompt)
 		}
 	}
 
-	return promts
+	return prompts
 }
 
-function finishSection(promt: Partial<TPromt>, section: 'system' | 'user' | 'segment' | 'options' | 'jsonresponse', lines: string[], use: 'core' | 'json', segmentName?: string | null): void {
+function finishSection(prompt: Partial<TPrompt>, section: 'system' | 'user' | 'segment' | 'options' | 'jsonresponse', lines: string[], use: 'core' | 'json', segmentName?: string | null): void {
 	const content = lines.join('\n').trim()
 	if (section === 'system') {
-		promt.system = content
+		prompt.system = content
 	} else if (section === 'user') {
-		promt.user = content
+		prompt.user = content
 	} else if (section === 'segment' && segmentName) {
-		if (!promt.segment) {
-			promt.segment = {}
+		if (!prompt.segment) {
+			prompt.segment = {}
 		}
-		promt.segment[segmentName] = content
+		prompt.segment[segmentName] = content
 	} else if (section === 'options') {
 		const rawOptions = parseOptionsToObject(content)
-		promt.options = PromtOptionsParse(use, rawOptions, false)
+		prompt.options = PromptOptionsParse(use, rawOptions, false)
 	} else if (section === 'jsonresponse') {
-		promt.jsonresponse = content
+		prompt.jsonresponse = content
 	}
 }
 

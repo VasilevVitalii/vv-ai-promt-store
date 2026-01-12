@@ -1,26 +1,26 @@
 export {
-	TPromtOptions,
-	TPromtOptionsOpenAi,
-	TPromtOptionsOllama,
-	TPromtOptionsLlamaCpp,
-	SPromtOptions,
-	SPromtOptionsJson,
+	TPromptOptions,
+	TPromptOptionsOpenAi,
+	TPromptOptionsOllama,
+	TPromptOptionsLlamaCpp,
+	SPromptOptions,
+	SPromptOptionsJson,
 	defVal,
 	defValJson,
-} from './promtOptions/index.js'
+} from './promptOptions/index.js'
 export { CheckJsonSchema } from './checkJsonSchema.js'
-export { PromtOptionsParse } from './promtOptionsParse.js'
-export { PromtLoad } from './promtLoad.js'
-export { PromtStore } from './promtStore.js'
-export { ToPromtOptionsOpenAi, ToPromtOptionsOllama, ToPromtOptionsLlamaCpp } from './toPromtOptions.js'
+export { PromptOptionsParse } from './promptOptionsParse.js'
+export { PromptConvFromString } from './promptConvFromString.js'
+export { PromptConvToString } from './promptConvToString.js'
+export { ToPromptOptionsOpenAi, ToPromptOptionsOllama, ToPromptOptionsLlamaCpp } from './toPromptOptions.js'
 export { ConvertJsonSchemaToGbnf } from './convertJsonSchemaToGbnf.js'
 
-export type TPromt = {
+export type TPrompt = {
 	system?: string
 	user: string
-	options?: TPromtOptions
+	options?: TPromptOptions
 	segment?: Record<string, string>
 	jsonresponse?: string
 }
 
-import { TPromtOptions } from './promtOptions/index.js'
+import { TPromptOptions } from './promptOptions/index.js'

@@ -1,9 +1,9 @@
-import { TPromt, TPromtOptions } from './index.js'
+import { TPrompt, TPromptOptions } from './index.js'
 
 /**
  * Serializes prompt objects into a text string with structured sections.
  *
- * @param promt - Array of TPromt objects to serialize
+ * @param prompt - Array of TPrompt objects to serialize
  * @returns Formatted text string with $$begin/$$end markers and sections
  *
  * @remarks
@@ -16,14 +16,14 @@ import { TPromt, TPromtOptions } from './index.js'
  *
  * @example
  * ```typescript
- * const prompts: TPromt[] = [{
+ * const prompts: TPrompt[] = [{
  *   system: 'You are helpful',
  *   user: 'Hello!',
  *   options: { temperature: 0.7 },
  *   jsonresponse: '{"type": "object"}'
  * }]
  *
- * const text = PromtStore(prompts)
+ * const text = PromptConvToString(prompts)
  * // Returns:
  * // $$begin
  * // $$options
@@ -37,38 +37,38 @@ import { TPromt, TPromtOptions } from './index.js'
  * // $$end
  * ```
  */
-export function PromtStore(promt: TPromt[]): string {
-	return serialize(promt)
+export function PromptConvToString(prompt: TPrompt[]): string {
+	return serialize(prompt)
 }
 
-function serialize(promts: TPromt[]): string {
+function serialize(prompts: TPrompt[]): string {
 	const result: string[] = []
 
-	for (const promt of promts) {
+	for (const prompt of prompts) {
 		result.push('$$begin')
 
-		if (promt.options) {
+		if (prompt.options) {
 			result.push('$$options')
-			for (const [key, value] of Object.entries(promt.options)) {
-				result.push(serializeOptionValue(key as keyof TPromtOptions, value))
+			for (const [key, value] of Object.entries(prompt.options)) {
+				result.push(serializeOptionValue(key as keyof TPromptOptions, value))
 			}
 		}
 
-		if (promt.system) {
+		if (prompt.system) {
 			result.push('$$system')
-			result.push(promt.system)
+			result.push(prompt.system)
 		}
 
 		result.push('$$user')
-		result.push(promt.user)
+		result.push(prompt.user)
 
-		if (promt.jsonresponse) {
+		if (prompt.jsonresponse) {
 			result.push('$$jsonresponse')
-			result.push(promt.jsonresponse)
+			result.push(prompt.jsonresponse)
 		}
 
-		if (promt.segment) {
-			for (const [key, value] of Object.entries(promt.segment)) {
+		if (prompt.segment) {
+			for (const [key, value] of Object.entries(prompt.segment)) {
 				result.push(`$$segment=${key}`)
 				result.push(value)
 			}
@@ -80,7 +80,7 @@ function serialize(promts: TPromt[]): string {
 	return result.join('\n')
 }
 
-function serializeOptionValue(key: keyof TPromtOptions, value: any): string {
+function serializeOptionValue(key: keyof TPromptOptions, value: any): string {
 	if (value === undefined) {
 		return `${key}=`
 	}

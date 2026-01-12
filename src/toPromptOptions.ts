@@ -1,11 +1,11 @@
-import { TPromtOptions, TPromtOptionsOpenAi, TPromtOptionsOllama, TPromtOptionsLlamaCpp } from './promtOptions/index.js'
+import { TPromptOptions, TPromptOptionsOpenAi, TPromptOptionsOllama, TPromptOptionsLlamaCpp } from './promptOptions/index.js'
 import { CheckJsonSchema } from './checkJsonSchema.js'
 import { ConvertJsonSchemaToGbnf } from './convertJsonSchemaToGbnf.js'
 
 /**
  * Converts universal prompt options to OpenAI API format.
  *
- * @param options - Universal TPromtOptions object
+ * @param options - Universal TPromptOptions object
  * @param jsonresponse - Optional JSON Schema grammar string for structured output via OpenAI response_format
  * @returns Options object formatted for OpenAI API with snake_case parameter names
  *
@@ -23,14 +23,14 @@ import { ConvertJsonSchemaToGbnf } from './convertJsonSchemaToGbnf.js'
  *
  * @example
  * ```typescript
- * const options: TPromtOptions = {
+ * const options: TPromptOptions = {
  *   temperature: 0.7,
  *   topP: 0.9,
  *   maxTokens: 2048,
  *   frequencyPenalty: 0.5
  * }
  * const jsonresponse = '{"type": "object", "properties": {"name": {"type": "string"}}}'
- * const openaiOptions = ToPromtOptionsOpenAi(options, jsonresponse)
+ * const openaiOptions = ToPromptOptionsOpenAi(options, jsonresponse)
  * // Returns: {
  * //   temperature: 0.7,
  * //   top_p: 0.9,
@@ -47,8 +47,8 @@ import { ConvertJsonSchemaToGbnf } from './convertJsonSchemaToGbnf.js'
  * // }
  * ```
  */
-export function ToPromtOptionsOpenAi(options: TPromtOptions, jsonresponse?: string): TPromtOptionsOpenAi {
-	const result: TPromtOptionsOpenAi = {}
+export function ToPromptOptionsOpenAi(options: TPromptOptions, jsonresponse?: string): TPromptOptionsOpenAi {
+	const result: TPromptOptionsOpenAi = {}
 
 	if (options.temperature !== undefined) result.temperature = options.temperature
 	if (options.topP !== undefined) result.top_p = options.topP
@@ -88,7 +88,7 @@ export function ToPromtOptionsOpenAi(options: TPromtOptions, jsonresponse?: stri
 /**
  * Converts universal prompt options to Ollama API format.
  *
- * @param options - Universal TPromtOptions object
+ * @param options - Universal TPromptOptions object
  * @returns Options object formatted for Ollama API with snake_case parameter names
  *
  * @remarks
@@ -107,19 +107,19 @@ export function ToPromtOptionsOpenAi(options: TPromtOptions, jsonresponse?: stri
  *
  * @example
  * ```typescript
- * const options: TPromtOptions = {
+ * const options: TPromptOptions = {
  *   temperature: 0.8,
  *   topK: 40,
  *   maxTokens: 512,
  *   mirostat: 2,
  *   mirostatTau: 5.0
  * }
- * const ollamaOptions = ToPromtOptionsOllama(options)
+ * const ollamaOptions = ToPromptOptionsOllama(options)
  * // Returns: { temperature: 0.8, top_k: 40, num_predict: 512, mirostat: 2, mirostat_tau: 5.0 }
  * ```
  */
-export function ToPromtOptionsOllama(options: TPromtOptions): TPromtOptionsOllama {
-	const result: TPromtOptionsOllama = {}
+export function ToPromptOptionsOllama(options: TPromptOptions): TPromptOptionsOllama {
+	const result: TPromptOptionsOllama = {}
 
 	if (options.temperature !== undefined) result.temperature = options.temperature
 	if (options.topP !== undefined) result.top_p = options.topP
@@ -143,7 +143,7 @@ export function ToPromtOptionsOllama(options: TPromtOptions): TPromtOptionsOllam
 /**
  * Converts universal prompt options to node-llama-cpp API format.
  *
- * @param options - Universal TPromtOptions object
+ * @param options - Universal TPromptOptions object
  * @param jsonresponse - Optional JSON Schema string to convert to GBNF format
  * @returns Options object formatted for node-llama-cpp API with camelCase parameter names
  *
@@ -163,7 +163,7 @@ export function ToPromtOptionsOllama(options: TPromtOptions): TPromtOptionsOllam
  *
  * @example
  * ```typescript
- * const options: TPromtOptions = {
+ * const options: TPromptOptions = {
  *   temperature: 0.7,
  *   topP: 0.9,
  *   maxTokens: 1024,
@@ -172,7 +172,7 @@ export function ToPromtOptionsOllama(options: TPromtOptions): TPromtOptionsOllam
  *   frequencyPenalty: 0.5
  * }
  * const jsonresponse = '{"type": "object", "properties": {"name": {"type": "string"}}}'
- * const llamaCppOptions = ToPromtOptionsLlamaCpp(options, jsonresponse)
+ * const llamaCppOptions = ToPromptOptionsLlamaCpp(options, jsonresponse)
  * // Returns: {
  * //   temperature: 0.7,
  * //   topP: 0.9,
@@ -186,8 +186,8 @@ export function ToPromtOptionsOllama(options: TPromtOptions): TPromtOptionsOllam
  * // }
  * ```
  */
-export function ToPromtOptionsLlamaCpp(options: TPromtOptions, jsonresponse?: string): TPromtOptionsLlamaCpp {
-	const result: TPromtOptionsLlamaCpp = {}
+export function ToPromptOptionsLlamaCpp(options: TPromptOptions, jsonresponse?: string): TPromptOptionsLlamaCpp {
+	const result: TPromptOptionsLlamaCpp = {}
 
 	if (options.temperature !== undefined) result.temperature = options.temperature
 	if (options.topP !== undefined) result.topP = options.topP

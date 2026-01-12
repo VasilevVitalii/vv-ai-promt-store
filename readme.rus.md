@@ -9,7 +9,7 @@
 
 [English](readme.md)
 
-# vv-ai-promt-store
+# vv-ai-prompt-format
 
 Легковесная TypeScript библиотека для хранения и управления AI-промптами в простом текстовом формате.
 
@@ -24,7 +24,7 @@
 ## Установка
 
 ```bash
-npm install vv-ai-promt-store
+npm install vv-ai-prompt-format
 ```
 
 ## Формат
@@ -66,7 +66,7 @@ $$end
 ### Парсинг промптов из текста
 
 ```typescript
-import { PromtLoad } from 'vv-ai-promt-store'
+import { PromptConvFromString } from 'vv-ai-prompt-format'
 
 const text = `
 $$begin
@@ -80,7 +80,7 @@ $$user
 $$end
 `
 
-const prompts = PromtLoad(text)
+const prompts = PromptConvFromString(text)
 console.log(prompts)
 // [{
 //   system: 'Ты полезный ассистент',
@@ -92,9 +92,9 @@ console.log(prompts)
 ### Сериализация промптов в текст
 
 ```typescript
-import { PromtStore, TPromt } from 'vv-ai-promt-store'
+import { PromptConvToString, TPrompt } from 'vv-ai-prompt-format'
 
-const prompts: TPromt[] = [{
+const prompts: TPrompt[] = [{
   system: 'Ты полезный ассистент',
   user: 'Привет, мир!',
   options: {
@@ -103,7 +103,7 @@ const prompts: TPromt[] = [{
   }
 }]
 
-const text = PromtStore(prompts)
+const text = PromptConvToString(prompts)
 console.log(text)
 // $$begin
 // $$options
@@ -119,7 +119,7 @@ console.log(text)
 ### Несколько промптов
 
 ```typescript
-import { PromtLoad } from 'vv-ai-promt-store'
+import { PromptConvFromString } from 'vv-ai-prompt-format'
 
 const text = `
 $$begin
@@ -135,7 +135,7 @@ $$user
 $$end
 `
 
-const prompts = PromtLoad(text)
+const prompts = PromptConvFromString(text)
 console.log(prompts.length) // 2
 ```
 
@@ -144,9 +144,9 @@ console.log(prompts.length) // 2
 Секция `$$jsonresponse` позволяет определить JSON Schema для структурированного вывода ответа. Это полезно, когда нужно, чтобы AI возвращал данные в определённом формате:
 
 ```typescript
-import { PromtLoad, PromtStore, TPromt } from 'vv-ai-promt-store'
+import { PromptConvFromString, PromptConvToString, TPrompt } from 'vv-ai-prompt-format'
 
-const prompts: TPromt[] = [{
+const prompts: TPrompt[] = [{
   user: 'Сгенерируй профиль пользователя',
   jsonresponse: JSON.stringify({
     type: 'object',
@@ -159,7 +159,7 @@ const prompts: TPromt[] = [{
   })
 }]
 
-const text = PromtStore(prompts)
+const text = PromptConvToString(prompts)
 console.log(text)
 // $$begin
 // $$user
@@ -168,7 +168,7 @@ console.log(text)
 // {"type":"object","required":["name","age"],"properties":{"name":{"type":"string"},"age":{"type":"number"},"email":{"type":"string","format":"email"}}}
 // $$end
 
-const parsed = PromtLoad(text)
+const parsed = PromptConvFromString(text)
 console.log(JSON.parse(parsed[0].jsonresponse)) // Доступ к JSON Schema
 ```
 
@@ -177,9 +177,9 @@ console.log(JSON.parse(parsed[0].jsonresponse)) // Доступ к JSON Schema
 Сегменты позволяют хранить именованные блоки текста внутри промпта:
 
 ```typescript
-import { PromtLoad, PromtStore, TPromt } from 'vv-ai-promt-store'
+import { PromptConvFromString, PromptConvToString, TPrompt } from 'vv-ai-prompt-format'
 
-const prompts: TPromt[] = [{
+const prompts: TPrompt[] = [{
   user: 'Проанализируй этот код',
   segment: {
     code: 'function hello() { return "world"; }',
@@ -187,7 +187,7 @@ const prompts: TPromt[] = [{
   }
 }]
 
-const text = PromtStore(prompts)
+const text = PromptConvToString(prompts)
 console.log(text)
 // $$begin
 // $$user
@@ -198,7 +198,7 @@ console.log(text)
 // test("hello", () => { expect(hello()).toBe("world"); })
 // $$end
 
-const parsed = PromtLoad(text)
+const parsed = PromptConvFromString(text)
 console.log(parsed[0].segment.code) // Доступ к содержимому сегмента
 ```
 
@@ -207,7 +207,7 @@ console.log(parsed[0].segment.code) // Доступ к содержимому с
 ### Типы
 
 ```typescript
-type TPromtOptions = {
+type TPromptOptions = {
   temperature?: number
   topP?: number
   topK?: number
@@ -225,10 +225,10 @@ type TPromtOptions = {
   trimWhitespace?: boolean
 }
 
-type TPromt = {
+type TPrompt = {
   system?: string
   user: string
-  options?: TPromtOptions
+  options?: TPromptOptions
   segment?: Record<string, string>
   jsonresponse?: string
 }
@@ -257,7 +257,7 @@ type TPromt = {
 
 ### Функции
 
-#### `PromtLoad(raw: string, use?: 'core' | 'json'): TPromt[]`
+#### `PromptConvFromString(raw: string, use?: 'core' | 'json'): TPrompt[]`
 
 Парсит текст и возвращает массив промптов.
 
@@ -268,14 +268,14 @@ type TPromt = {
   - `'json'` - Настройки для структурированного JSON вывода (ниже temperature, детерминированность)
 
 **Возвращает:**
-- Массив объектов `TPromt`
+- Массив объектов `TPrompt`
 
 **Пример:**
 ```typescript
-const prompts = PromtLoad(text, 'json') // Использовать JSON схему с дефолтами
+const prompts = PromptConvFromString(text, 'json') // Использовать JSON схему с дефолтами
 ```
 
-#### `PromtOptionsParse(use: 'core' | 'json', raw?: object, useAllOptions?: boolean): TPromtOptions`
+#### `PromptOptionsParse(use: 'core' | 'json', raw?: object, useAllOptions?: boolean): TPromptOptions`
 
 Парсит и валидирует опции промпта из сырого объекта.
 
@@ -285,25 +285,25 @@ const prompts = PromtLoad(text, 'json') // Использовать JSON схе�
 - `useAllOptions` - Если `true`, возвращает все опции с дефолтами; если `false`, возвращает только указанные опции (опционально, по умолчанию: `true`)
 
 **Возвращает:**
-- Валидированный объект `TPromtOptions`. Невалидные значения заменяются на дефолтные. Никогда не выбрасывает ошибки.
+- Валидированный объект `TPromptOptions`. Невалидные значения заменяются на дефолтные. Никогда не выбрасывает ошибки.
 
 **Пример:**
 ```typescript
 // Получить все опции с дефолтами
-const options = PromtOptionsParse('core', { temperature: 0.7 })
+const options = PromptOptionsParse('core', { temperature: 0.7 })
 // Вернет: { temperature: 0.7, topP: 0.9, topK: 40, ... все остальные дефолты }
 
 // Получить только указанные опции
-const options = PromtOptionsParse('core', { temperature: 0.7 }, false)
+const options = PromptOptionsParse('core', { temperature: 0.7 }, false)
 // Вернет: { temperature: 0.7 }
 ```
 
-#### `PromtStore(promt: TPromt[]): string`
+#### `PromptConvToString(prompt: TPrompt[]): string`
 
 Сериализует массив промптов в текстовый формат.
 
 **Параметры:**
-- `promt` - Массив объектов `TPromt`
+- `prompt` - Массив объектов `TPrompt`
 
 **Возвращает:**
 - Строка в указанном формате

@@ -1,6 +1,6 @@
 import { IntegerOptions, NumberOptions, SchemaOptions } from '@sinclair/typebox'
 
-export const PromtValue = {
+export const PromptValue = {
 	temperature: {
 		description: '[openai, ollama, llama-cpp] Sampling temperature (higher = more creative, lower = more deterministic)',
 		minimum: 0.0,

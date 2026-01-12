@@ -9,7 +9,7 @@
 
 [Русский](readme.rus.md)
 
-# vv-ai-promt-store
+# vv-ai-prompt-format
 
 A lightweight TypeScript library for storing and managing AI prompts in a simple text format.
 
@@ -24,7 +24,7 @@ A lightweight TypeScript library for storing and managing AI prompts in a simple
 ## Installation
 
 ```bash
-npm install vv-ai-promt-store
+npm install vv-ai-prompt-format
 ```
 
 ## Format
@@ -66,7 +66,7 @@ $$end
 ### Parsing prompts from text
 
 ```typescript
-import { PromtLoad } from 'vv-ai-promt-store'
+import { PromptConvFromString } from 'vv-ai-prompt-format'
 
 const text = `
 $$begin
@@ -80,7 +80,7 @@ What is 2+2?
 $$end
 `
 
-const prompts = PromtLoad(text)
+const prompts = PromptConvFromString(text)
 console.log(prompts)
 // [{
 //   system: 'You are a helpful assistant',
@@ -92,9 +92,9 @@ console.log(prompts)
 ### Serializing prompts to text
 
 ```typescript
-import { PromtStore, TPromt } from 'vv-ai-promt-store'
+import { PromptConvToString, TPrompt } from 'vv-ai-prompt-format'
 
-const prompts: TPromt[] = [{
+const prompts: TPrompt[] = [{
   system: 'You are a helpful assistant',
   user: 'Hello, world!',
   options: {
@@ -103,7 +103,7 @@ const prompts: TPromt[] = [{
   }
 }]
 
-const text = PromtStore(prompts)
+const text = PromptConvToString(prompts)
 console.log(text)
 // $$begin
 // $$options
@@ -119,7 +119,7 @@ console.log(text)
 ### Multiple prompts
 
 ```typescript
-import { PromtLoad } from 'vv-ai-promt-store'
+import { PromptConvFromString } from 'vv-ai-prompt-format'
 
 const text = `
 $$begin
@@ -135,7 +135,7 @@ Second prompt
 $$end
 `
 
-const prompts = PromtLoad(text)
+const prompts = PromptConvFromString(text)
 console.log(prompts.length) // 2
 ```
 
@@ -144,9 +144,9 @@ console.log(prompts.length) // 2
 The `$$jsonresponse` section allows you to define a JSON Schema for structured response output. This is useful when you need the AI to return data in a specific format:
 
 ```typescript
-import { PromtLoad, PromtStore, TPromt } from 'vv-ai-promt-store'
+import { PromptConvFromString, PromptConvToString, TPrompt } from 'vv-ai-prompt-format'
 
-const prompts: TPromt[] = [{
+const prompts: TPrompt[] = [{
   user: 'Generate a user profile',
   jsonresponse: JSON.stringify({
     type: 'object',
@@ -159,7 +159,7 @@ const prompts: TPromt[] = [{
   })
 }]
 
-const text = PromtStore(prompts)
+const text = PromptConvToString(prompts)
 console.log(text)
 // $$begin
 // $$user
@@ -168,7 +168,7 @@ console.log(text)
 // {"type":"object","required":["name","age"],"properties":{"name":{"type":"string"},"age":{"type":"number"},"email":{"type":"string","format":"email"}}}
 // $$end
 
-const parsed = PromtLoad(text)
+const parsed = PromptConvFromString(text)
 console.log(JSON.parse(parsed[0].jsonresponse)) // Access the JSON Schema
 ```
 
@@ -177,9 +177,9 @@ console.log(JSON.parse(parsed[0].jsonresponse)) // Access the JSON Schema
 Segments allow you to store named blocks of text within a prompt:
 
 ```typescript
-import { PromtLoad, PromtStore, TPromt } from 'vv-ai-promt-store'
+import { PromptConvFromString, PromptConvToString, TPrompt } from 'vv-ai-prompt-format'
 
-const prompts: TPromt[] = [{
+const prompts: TPrompt[] = [{
   user: 'Analyze this code',
   segment: {
     code: 'function hello() { return "world"; }',
@@ -187,7 +187,7 @@ const prompts: TPromt[] = [{
   }
 }]
 
-const text = PromtStore(prompts)
+const text = PromptConvToString(prompts)
 console.log(text)
 // $$begin
 // $$user
@@ -198,7 +198,7 @@ console.log(text)
 // test("hello", () => { expect(hello()).toBe("world"); })
 // $$end
 
-const parsed = PromtLoad(text)
+const parsed = PromptConvFromString(text)
 console.log(parsed[0].segment.code) // Access segment content
 ```
 
@@ -207,7 +207,7 @@ console.log(parsed[0].segment.code) // Access segment content
 ### Types
 
 ```typescript
-type TPromtOptions = {
+type TPromptOptions = {
   temperature?: number
   topP?: number
   topK?: number
@@ -225,10 +225,10 @@ type TPromtOptions = {
   trimWhitespace?: boolean
 }
 
-type TPromt = {
+type TPrompt = {
   system?: string
   user: string
-  options?: TPromtOptions
+  options?: TPromptOptions
   segment?: Record<string, string>
   jsonresponse?: string
 }
@@ -257,7 +257,7 @@ The `$$options` section supports various formats for values:
 
 ### Functions
 
-#### `PromtLoad(raw: string, use?: 'core' | 'json'): TPromt[]`
+#### `PromptConvFromString(raw: string, use?: 'core' | 'json'): TPrompt[]`
 
 Parses text and returns an array of prompts.
 
@@ -268,14 +268,14 @@ Parses text and returns an array of prompts.
   - `'json'` - Structured JSON output settings (lower temperature, deterministic)
 
 **Returns:**
-- Array of `TPromt` objects
+- Array of `TPrompt` objects
 
 **Example:**
 ```typescript
-const prompts = PromtLoad(text, 'json') // Use JSON schema defaults
+const prompts = PromptConvFromString(text, 'json') // Use JSON schema defaults
 ```
 
-#### `PromtOptionsParse(use: 'core' | 'json', raw?: object, useAllOptions?: boolean): TPromtOptions`
+#### `PromptOptionsParse(use: 'core' | 'json', raw?: object, useAllOptions?: boolean): TPromptOptions`
 
 Parses and validates prompt options from a raw object.
 
@@ -285,25 +285,25 @@ Parses and validates prompt options from a raw object.
 - `useAllOptions` - If `true`, returns all options with defaults; if `false`, returns only specified options (optional, default: `true`)
 
 **Returns:**
-- Validated `TPromtOptions` object. Invalid values are replaced with defaults. Never throws errors.
+- Validated `TPromptOptions` object. Invalid values are replaced with defaults. Never throws errors.
 
 **Example:**
 ```typescript
 // Get all options with defaults
-const options = PromtOptionsParse('core', { temperature: 0.7 })
+const options = PromptOptionsParse('core', { temperature: 0.7 })
 // Returns: { temperature: 0.7, topP: 0.9, topK: 40, ... all other defaults }
 
 // Get only specified options
-const options = PromtOptionsParse('core', { temperature: 0.7 }, false)
+const options = PromptOptionsParse('core', { temperature: 0.7 }, false)
 // Returns: { temperature: 0.7 }
 ```
 
-#### `PromtStore(promt: TPromt[]): string`
+#### `PromptConvToString(prompt: TPrompt[]): string`
 
 Serializes an array of prompts to text format.
 
 **Parameters:**
-- `promt` - Array of `TPromt` objects
+- `prompt` - Array of `TPrompt` objects
 
 **Returns:**
 - String in the specified format
