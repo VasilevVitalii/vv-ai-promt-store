@@ -33,6 +33,9 @@ The library uses a simple text format with special markers:
 
 ```
 $$begin
+$$llm
+url=http://localhost:11434
+model=llama2
 $$options
 temperature=0.7
 maxTokens=4096
@@ -53,6 +56,7 @@ $$end
 - `$$end` - End of a prompt block
 - `$$user` - User prompt (required)
 - `$$system` - System prompt (optional)
+- `$$llm` - LLM configuration with url and model (optional)
 - `$$options` - LLM settings section (optional)
 - `$$jsonresponse` - JSON Schema for structured response output (optional)
 - `$$segment=name` - Named text segments (optional)
@@ -202,6 +206,42 @@ const parsed = PromptConvFromString(text)
 console.log(parsed[0].segment.code) // Access segment content
 ```
 
+### Working with LLM configuration
+
+The `$$llm` section allows you to specify the LLM endpoint URL and model name:
+
+```typescript
+import { PromptConvFromString, PromptConvToString, TPrompt } from 'vv-ai-prompt-format'
+
+const prompts: TPrompt[] = [{
+  llm: {
+    url: 'http://localhost:11434',
+    model: 'llama2'
+  },
+  user: 'What is the meaning of life?',
+  options: {
+    temperature: 0.7,
+    maxTokens: 2048
+  }
+}]
+
+const text = PromptConvToString(prompts)
+console.log(text)
+// $$begin
+// $$llm
+// url=http://localhost:11434
+// model=llama2
+// $$options
+// temperature=0.7
+// maxTokens=2048
+// $$user
+// What is the meaning of life?
+// $$end
+
+const parsed = PromptConvFromString(text)
+console.log(parsed[0].llm) // { url: 'http://localhost:11434', model: 'llama2' }
+```
+
 ## API
 
 ### Types
@@ -231,6 +271,7 @@ type TPrompt = {
   options?: TPromptOptions
   segment?: Record<string, string>
   jsonresponse?: string
+  llm?: { url?: string; model?: string }
 }
 ```
 

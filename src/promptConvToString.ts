@@ -9,7 +9,8 @@ import { TPrompt, TPromptOptions } from './index.js'
  * @remarks
  * Output format structure:
  * - Each prompt is wrapped in `$$begin` / `$$end`
- * - Sections are ordered: $$options, $$system, $$user, $$jsonresponse, $$segment=*
+ * - Sections are ordered: $$llm, $$options, $$system, $$user, $$jsonresponse, $$segment=*
+ * - LLM config is serialized in key=value format (url and model)
  * - Options are serialized in key=value format
  * - Arrays and objects are serialized as JSON
  * - JSON response schema is stored as formatted JSON Schema
@@ -46,6 +47,16 @@ function serialize(prompts: TPrompt[]): string {
 
 	for (const prompt of prompts) {
 		result.push('$$begin')
+
+		if (prompt.llm) {
+			result.push('$$llm')
+			if (prompt.llm.url !== undefined) {
+				result.push(`url=${prompt.llm.url}`)
+			}
+			if (prompt.llm.model !== undefined) {
+				result.push(`model=${prompt.llm.model}`)
+			}
+		}
 
 		if (prompt.options) {
 			result.push('$$options')

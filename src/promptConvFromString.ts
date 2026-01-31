@@ -1,4 +1,4 @@
-import { TPrompt, TPromptOptions } from './index.js'
+import { TPrompt } from './index.js'
 import { PromptOptionsParse } from './promptOptionsParse.js'
 
 /**
@@ -14,6 +14,7 @@ import { PromptOptionsParse } from './promptOptionsParse.js'
  * - `$$system` - System message (optional)
  * - `$$user` - User message (required)
  * - `$$options` - Model parameters in key=value format (optional)
+ * - `$$llm` - LLM configuration with url and model (optional)
  * - `$$jsonresponse` - JSON Schema for structured response output (optional)
  * - `$$segment=name` - Named content segments (optional)
  *
@@ -45,7 +46,7 @@ function parse(content: string, use: 'core' | 'json'): TPrompt[] {
 
 	let inBlock = false
 	let currentPrompt: Partial<TPrompt> | null = null
-	let currentSection: 'system' | 'user' | 'segment' | 'options' | 'jsonresponse' | null = null
+	let currentSection: 'system' | 'user' | 'segment' | 'options' | 'llm' | 'jsonresponse' | null = null
 	let currentSegmentName: string | null = null
 	let sectionContent: string[] = []
 
@@ -121,6 +122,16 @@ function parse(content: string, use: 'core' | 'json'): TPrompt[] {
 			continue
 		}
 
+		if (trimmed === '$$llm') {
+			if (currentSection && sectionContent.length > 0) {
+				finishSection(currentPrompt, currentSection, sectionContent, use, currentSegmentName)
+			}
+			currentSection = 'llm'
+			currentSegmentName = null
+			sectionContent = []
+			continue
+		}
+
 		if (trimmed === '$$jsonresponse') {
 			if (currentSection && sectionContent.length > 0) {
 				finishSection(currentPrompt, currentSection, sectionContent, use, currentSegmentName)
@@ -158,7 +169,7 @@ function parse(content: string, use: 'core' | 'json'): TPrompt[] {
 	return prompts
 }
 
-function finishSection(prompt: Partial<TPrompt>, section: 'system' | 'user' | 'segment' | 'options' | 'jsonresponse', lines: string[], use: 'core' | 'json', segmentName?: string | null): void {
+function finishSection(prompt: Partial<TPrompt>, section: 'system' | 'user' | 'segment' | 'options' | 'llm' | 'jsonresponse', lines: string[], use: 'core' | 'json', segmentName?: string | null): void {
 	const content = lines.join('\n').trim()
 	if (section === 'system') {
 		prompt.system = content
@@ -172,6 +183,17 @@ function finishSection(prompt: Partial<TPrompt>, section: 'system' | 'user' | 's
 	} else if (section === 'options') {
 		const rawOptions = parseOptionsToObject(content)
 		prompt.options = PromptOptionsParse(use, rawOptions, false)
+	} else if (section === 'llm') {
+		const llmConfig = parseOptionsToObject(content)
+		if (llmConfig.url || llmConfig.model) {
+			prompt.llm = {}
+			if (llmConfig.url) {
+				prompt.llm.url = String(llmConfig.url)
+			}
+			if (llmConfig.model) {
+				prompt.llm.model = String(llmConfig.model)
+			}
+		}
 	} else if (section === 'jsonresponse') {
 		prompt.jsonresponse = content
 	}
@@ -200,7 +222,7 @@ function parseOptionsToObject(content: string): Record<string, any> {
 	return options
 }
 
-function parseOptionValue(valueStr: string): number | boolean | string[] | Record<string, any> | undefined {
+function parseOptionValue(valueStr: string): number | boolean | string | string[] | Record<string, any> | undefined {
 	// Пустое значение = undefined
 	if (valueStr === '') {
 		return undefined
@@ -236,5 +258,6 @@ function parseOptionValue(valueStr: string): number | boolean | string[] | Recor
 		return parsed
 	}
 
-	return undefined
+	// Если ничего не подошло, возвращаем как строку
+	return cleanValue
 }

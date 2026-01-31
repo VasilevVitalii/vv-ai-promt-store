@@ -33,6 +33,9 @@ npm install vv-ai-prompt-format
 
 ```
 $$begin
+$$llm
+url=http://localhost:11434
+model=llama2
 $$options
 temperature=0.7
 maxTokens=4096
@@ -53,6 +56,7 @@ $$end
 - `$$end` - Конец блока промпта
 - `$$user` - Пользовательский промпт (обязательно)
 - `$$system` - Системный промпт (опционально)
+- `$$llm` - Конфигурация LLM с url и model (опционально)
 - `$$options` - Секция настроек LLM (опционально)
 - `$$jsonresponse` - JSON Schema для структурированного вывода ответа (опционально)
 - `$$segment=имя` - Именованные текстовые сегменты (опционально)
@@ -202,6 +206,42 @@ const parsed = PromptConvFromString(text)
 console.log(parsed[0].segment.code) // Доступ к содержимому сегмента
 ```
 
+### Работа с конфигурацией LLM
+
+Секция `$$llm` позволяет указать URL эндпоинта LLM и название модели:
+
+```typescript
+import { PromptConvFromString, PromptConvToString, TPrompt } from 'vv-ai-prompt-format'
+
+const prompts: TPrompt[] = [{
+  llm: {
+    url: 'http://localhost:11434',
+    model: 'llama2'
+  },
+  user: 'В чём смысл жизни?',
+  options: {
+    temperature: 0.7,
+    maxTokens: 2048
+  }
+}]
+
+const text = PromptConvToString(prompts)
+console.log(text)
+// $$begin
+// $$llm
+// url=http://localhost:11434
+// model=llama2
+// $$options
+// temperature=0.7
+// maxTokens=2048
+// $$user
+// В чём смысл жизни?
+// $$end
+
+const parsed = PromptConvFromString(text)
+console.log(parsed[0].llm) // { url: 'http://localhost:11434', model: 'llama2' }
+```
+
 ## API
 
 ### Типы
@@ -231,6 +271,7 @@ type TPrompt = {
   options?: TPromptOptions
   segment?: Record<string, string>
   jsonresponse?: string
+  llm?: { url?: string; model?: string }
 }
 ```
 

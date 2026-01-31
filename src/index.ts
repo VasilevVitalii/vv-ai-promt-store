@@ -21,6 +21,7 @@ export type TPrompt = {
 	options?: TPromptOptions
 	segment?: Record<string, string>
 	jsonresponse?: string
+	llm?: { url?: string; model?: string }
 }
 
 import { TPromptOptions } from './promptOptions/index.js'

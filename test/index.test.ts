@@ -678,6 +678,241 @@ describe('PromptConvFromString + PromptConvToString round-trip', () => {
     })
 })
 
+describe('$$llm section', () => {
+    test('парсит промпт с секцией $$llm', () => {
+        const raw = `$$begin
+$$llm
+url=http://localhost:12345
+model=Qwen2.5-Coder-7B-Instruct-Q5_K_M.0.gguf
+$$user
+Generate code
+$$end`
+
+        const result = PromptConvFromString(raw)
+
+        expect(result).toHaveLength(1)
+        expect(result[0].user).toBe('Generate code')
+        expect(result[0].llm).toEqual({
+            url: 'http://localhost:12345',
+            model: 'Qwen2.5-Coder-7B-Instruct-Q5_K_M.0.gguf'
+        })
+    })
+
+    test('парсит промпт со всеми секциями включая $$llm', () => {
+        const raw = `$$begin
+$$llm
+url=http://localhost:8080
+model=test-model
+$$system
+You are a helpful assistant
+$$user
+Generate user data
+$$options
+temperature=0.3
+maxTokens=1000
+$$end`
+
+        const result = PromptConvFromString(raw)
+
+        expect(result).toHaveLength(1)
+        expect(result[0].llm).toEqual({
+            url: 'http://localhost:8080',
+            model: 'test-model'
+        })
+        expect(result[0].system).toBe('You are a helpful assistant')
+        expect(result[0].user).toBe('Generate user data')
+        expect(result[0].options).toEqual({ temperature: 0.3, maxTokens: 1000 })
+    })
+
+    test('сериализует промпт с llm в секцию $$llm', () => {
+        const prompts: TPrompt[] = [{
+            user: 'Test prompt',
+            llm: {
+                url: 'http://localhost:5000',
+                model: 'my-model'
+            }
+        }]
+
+        const result = PromptConvToString(prompts)
+
+        expect(result).toContain('$$llm')
+        expect(result).toContain('url=http://localhost:5000')
+        expect(result).toContain('model=my-model')
+    })
+
+    test('сериализует полный промпт с llm', () => {
+        const prompts: TPrompt[] = [{
+            llm: {
+                url: 'http://api.example.com',
+                model: 'gpt-4'
+            },
+            system: 'System prompt',
+            user: 'User prompt',
+            options: {
+                temperature: 0.5,
+                maxTokens: 2048
+            }
+        }]
+
+        const result = PromptConvToString(prompts)
+
+        expect(result).toContain('$$begin')
+        expect(result).toContain('$$llm')
+        expect(result).toContain('url=http://api.example.com')
+        expect(result).toContain('model=gpt-4')
+        expect(result).toContain('$$options')
+        expect(result).toContain('temperature=0.5')
+        expect(result).toContain('$$system')
+        expect(result).toContain('System prompt')
+        expect(result).toContain('$$user')
+        expect(result).toContain('User prompt')
+        expect(result).toContain('$$end')
+    })
+
+    test('round-trip сохраняет llm через $$llm', () => {
+        const original: TPrompt[] = [{
+            llm: {
+                url: 'http://localhost:11434',
+                model: 'llama2'
+            },
+            system: 'Generate data',
+            user: 'Create a user object',
+            options: {
+                temperature: 0.3,
+                maxTokens: 1500
+            }
+        }]
+
+        const serialized = PromptConvToString(original)
+        const parsed = PromptConvFromString(serialized)
+
+        expect(parsed).toHaveLength(1)
+        expect(parsed[0].llm).toEqual(original[0].llm)
+        expect(parsed[0].system).toBe(original[0].system)
+        expect(parsed[0].user).toBe(original[0].user)
+        expect(parsed[0].options).toEqual(original[0].options)
+    })
+
+    test('порядок секций с $$llm не важен', () => {
+        const raw = `$$begin
+$$user
+User prompt
+$$llm
+url=http://test.com
+model=test-model
+$$system
+System prompt
+$$options
+topK=40
+$$end`
+
+        const result = PromptConvFromString(raw)
+
+        expect(result).toHaveLength(1)
+        expect(result[0].user).toBe('User prompt')
+        expect(result[0].llm).toEqual({
+            url: 'http://test.com',
+            model: 'test-model'
+        })
+        expect(result[0].system).toBe('System prompt')
+        expect(result[0].options).toEqual({ topK: 40 })
+    })
+
+    test('парсит промпт только с url в $$llm', () => {
+        const raw = `$$begin
+$$llm
+url=http://localhost:8080
+$$user
+Test prompt
+$$end`
+
+        const result = PromptConvFromString(raw)
+
+        expect(result).toHaveLength(1)
+        expect(result[0].llm).toEqual({
+            url: 'http://localhost:8080'
+        })
+        expect(result[0].llm?.model).toBeUndefined()
+    })
+
+    test('парсит промпт только с model в $$llm', () => {
+        const raw = `$$begin
+$$llm
+model=gpt-4
+$$user
+Test prompt
+$$end`
+
+        const result = PromptConvFromString(raw)
+
+        expect(result).toHaveLength(1)
+        expect(result[0].llm).toEqual({
+            model: 'gpt-4'
+        })
+        expect(result[0].llm?.url).toBeUndefined()
+    })
+
+    test('сериализует промпт только с url в $$llm', () => {
+        const prompts: TPrompt[] = [{
+            user: 'Test',
+            llm: {
+                url: 'http://localhost:3000'
+            }
+        }]
+
+        const result = PromptConvToString(prompts)
+
+        expect(result).toContain('$$llm')
+        expect(result).toContain('url=http://localhost:3000')
+        expect(result).not.toContain('model=')
+    })
+
+    test('сериализует промпт только с model в $$llm', () => {
+        const prompts: TPrompt[] = [{
+            user: 'Test',
+            llm: {
+                model: 'llama2'
+            }
+        }]
+
+        const result = PromptConvToString(prompts)
+
+        expect(result).toContain('$$llm')
+        expect(result).toContain('model=llama2')
+        expect(result).not.toContain('url=')
+    })
+
+    test('round-trip сохраняет только url', () => {
+        const original: TPrompt[] = [{
+            user: 'Test',
+            llm: {
+                url: 'http://example.com'
+            }
+        }]
+
+        const serialized = PromptConvToString(original)
+        const parsed = PromptConvFromString(serialized)
+
+        expect(parsed[0].llm).toEqual({ url: 'http://example.com' })
+        expect(parsed[0].llm?.model).toBeUndefined()
+    })
+
+    test('round-trip сохраняет только model', () => {
+        const original: TPrompt[] = [{
+            user: 'Test',
+            llm: {
+                model: 'claude-3'
+            }
+        }]
+
+        const serialized = PromptConvToString(original)
+        const parsed = PromptConvFromString(serialized)
+
+        expect(parsed[0].llm).toEqual({ model: 'claude-3' })
+        expect(parsed[0].llm?.url).toBeUndefined()
+    })
+})
+
 describe('$$jsonresponse section', () => {
     test('парсит промпт с секцией $$jsonresponse', () => {
         const raw = `$$begin
